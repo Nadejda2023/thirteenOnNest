@@ -4,8 +4,10 @@ import { HydratedDocument } from 'mongoose';
 export type BlogDocument = HydratedDocument<Blogs>;
 @Schema()
 export class Blogs {
-  // @Prop({ required: true })
-  //_id: ObjectId;
+  // @Prop({ required: false })
+  //_id?: Types.ObjectId;
+  @Prop({ required: true, unique: true, type: String })
+  id: string;
   @Prop({ required: true })
   name: string;
   @Prop({ required: true })
@@ -20,19 +22,8 @@ export class Blogs {
 
 export const BlogSchema = SchemaFactory.createForClass(Blogs);
 
-// BlogSchema.virtual('id').get(function () {
-//   return this._id.toString();
-// });
-
-// BlogSchema.set('toJSON', {
-//   virtuals: true,
-//   transform: (doc, ret) => {
-//     delete ret._id;
-//   },
-// });
-
 export interface BlogsViewModel {
-  //_id: ObjectId;
+  id: string;
   name: string;
   description: string;
   websiteUrl: string;
@@ -42,6 +33,7 @@ export interface BlogsViewModel {
 
 export class BlogsViewModelType {
   constructor(
+    public id: string,
     public name: string,
     public description: string,
     public websiteUrl: string,

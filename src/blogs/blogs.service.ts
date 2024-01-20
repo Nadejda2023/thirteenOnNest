@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { BlogDocument, Blogs, BlogsViewModel } from './dto/blogSchems';
 import { BlogsRepository } from './blogs.repository';
 import { BlogQueryRepo } from './blogs.query-repository';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class BlogService {
@@ -35,17 +36,25 @@ export class BlogService {
   }
 
   async createBlog(name: string, description: string, website: string) {
-    const newBlog: BlogsViewModel = {
-      //_id: new ObjectId(),
+    const newBlog: Blogs = {
+      id: randomUUID(),
       name: name,
       description: description,
       websiteUrl: website,
       createdAt: new Date().toISOString(),
-      isMembership: true,
+      isMembership: false,
     };
 
-    const newBlogId = await this.blogsRepository.createBlog(newBlog);
-    return newBlogId;
+    const createdBlog: Blogs = await this.blogsRepository.createBlog(newBlog);
+    const resultBlog: BlogsViewModel = {
+      id: createdBlog.id,
+      name: createdBlog.name,
+      description: createdBlog.description,
+      websiteUrl: createdBlog.websiteUrl,
+      createdAt: createdBlog.createdAt,
+      isMembership: createdBlog.isMembership,
+    };
+    return resultBlog;
   }
 
   async updateBlog(

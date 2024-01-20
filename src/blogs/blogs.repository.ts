@@ -21,13 +21,26 @@ export class BlogsRepository {
   }
 
   async findBlogById(id: string): Promise<BlogsViewModel | null> {
-    return this.blogModel
-      .findById({ _id: id }, { projection: { __v: 0 } })
+    const foundBlog = await this.blogModel
+      .findOne({ id })
+      .select('-__v')
       .lean();
+    if (!foundBlog) {
+      return null;
+    }
+
+    return {
+      id: foundBlog.id,
+      name: foundBlog.name,
+      description: foundBlog.description,
+      websiteUrl: foundBlog.websiteUrl,
+      createdAt: foundBlog.createdAt,
+      isMembership: foundBlog.isMembership,
+    };
   }
 
-  async createBlog(newBlog: BlogsViewModel) {
-    const blog = await this.blogModel.insertMany([{ ...newBlog }]);
+  async createBlog(newBlog: Blogs) {
+    const blog = await this.blogModel.create(newBlog);
     //const newBlogId = await this.blogModel.findOne({ _id: new});
     return blog;
   }
@@ -39,14 +52,14 @@ export class BlogsRepository {
     website: string,
   ): Promise<boolean | undefined> {
     const result = await this.blogModel.updateOne(
-      { _id: id },
+      { id },
       { $set: { name, description, website } },
     );
     return result.matchedCount === 1;
   }
 
-  async deleteBlog(_id: string) {
-    const result = this.blogModel.deleteOne({ _id: _id });
+  async deleteBlog(id: string) {
+    const result = this.blogModel.deleteOne({ id });
 
     return (await result).deletedCount === 1;
   }
