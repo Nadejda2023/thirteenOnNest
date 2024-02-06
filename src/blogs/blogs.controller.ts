@@ -80,7 +80,7 @@ export class BlogsController {
       const user = req.user;
       const { title, shortDescription, content } = req.body;
 
-      const blogsCreatePost = await this.blogQueryRepo.createPostForBlog(
+      const blogsCreatePost = await this.blogsService.createPostForBlog(
         title,
         shortDescription,
         content,

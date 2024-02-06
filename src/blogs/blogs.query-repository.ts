@@ -79,10 +79,6 @@ export class BlogQueryRepo {
       .limit(pagination.pageSize)
       .lean();
 
-    // const resultWithIds = result.map((item) => {
-    //   const { _id, ...rest } = item;
-    //   return { ...rest, id: _id.toString() };
-    // });
     const totalCount: number = await this.postModel.countDocuments({ blogId });
     const pageCount: number = Math.ceil(totalCount / pagination.pageSize);
 
@@ -131,35 +127,6 @@ export class BlogQueryRepo {
 
     await this.postModel.create(createPostForBlog);
     return createPostForBlog;
-    // {
-    //   //id: createPostForBlog._id!.toString(),
-    //   title: createPostForBlog.title,
-    //   shortDescription: createPostForBlog.shortDescription,
-    //   content: createPostForBlog.content,
-    //   blogId: createPostForBlog.blogId,
-    //   blogName: createPostForBlog.blogName,
-    //   createdAt: createPostForBlog.createdAt,
-    //   extendedLikesInfo: {
-    //     likesCount: createPostForBlog.extendedLikesInfo.likesCount,
-    //     dislikesCount: createPostForBlog.extendedLikesInfo.dislikesCount,
-    //     myStatus: createPostForBlog.extendedLikesInfo.myStatus,
-    //     newestLikes: user
-    //       ? [
-    //           {
-    //             addedAt:
-    //               createPostForBlog.extendedLikesInfo.newestLikes[0]?.addedAt ||
-    //               '',
-    //             userId:
-    //               createPostForBlog.extendedLikesInfo.newestLikes[0]?.userId ||
-    //               '',
-    //             login:
-    //               createPostForBlog.extendedLikesInfo.newestLikes[0]?.login ||
-    //               '',
-    //           },
-    //         ]
-    //       : [],
-    //   },
-    // };
   }
 
   async findAllPosts(

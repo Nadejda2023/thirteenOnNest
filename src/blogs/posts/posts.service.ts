@@ -4,22 +4,28 @@ import { BlogsRepository } from '../blogs.repository';
 import {
   CreateAndUpdatePostDto,
   LikeStatus,
+  NewestLikeTypePost,
   PostDocument,
   PostViewModel2,
   Posts,
   PostsDBModels,
 } from '../dto/postSchema';
-import { User, UserDocument, UsersModel } from '../dto/usersSchemas';
+import { UsersModel } from '../dto/usersSchemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PostsQueryRepository } from './posts.query-repository';
 import { randomUUID } from 'crypto';
+import {
+  Comment,
+  CommentDocument,
+  commentViewType,
+} from '../dto/commentSchemas';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectModel(Posts.name) private postModel: Model<PostDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     protected postsRepository: PostsRepository,
     protected blogsRepository: BlogsRepository,
     protected postsQueryRepository: PostsQueryRepository,
@@ -92,6 +98,67 @@ export class PostService {
     );
 
     return result ? true : false;
+  }
+  async createPostComment(
+    postId: string,
+    content: string,
+    commentatorInfo: { userId: string; userLogin: string },
+  ): Promise<commentViewType> {
+    const createCommentForPost = {
+      id: randomUUID(),
+      content,
+      commentatorInfo,
+      createdAt: new Date().toISOString(),
+      postId,
+      likesInfo: {
+        likesCount: 0,
+        dislikesCount: 0,
+        myStatus: 'None',
+      },
+    };
+    await this.commentModel.create(createCommentForPost);
+    return {
+      id: createCommentForPost.id,
+      content: createCommentForPost.content,
+      commentatorInfo: createCommentForPost.commentatorInfo,
+      createdAt: createCommentForPost.createdAt,
+      likesInfo: {
+        likesCount: createCommentForPost.likesInfo.likesCount,
+        dislikesCount: createCommentForPost.likesInfo.dislikesCount,
+        myStatus: createCommentForPost.likesInfo.myStatus,
+      },
+    };
+  }
+  async updatePostLikeStatus(
+    existingPost: PostsDBModels,
+    latestLikes: NewestLikeTypePost[],
+  ) {
+    console.log(JSON.stringify(existingPost));
+    try {
+      const result = await this.postModel.updateOne(
+        { id: existingPost.id },
+        {
+          $set: {
+            'extendedLikesInfo.likesCount':
+              existingPost.extendedLikesInfo.likesCount,
+            'extendedLikesInfo.dislikesCount':
+              existingPost.extendedLikesInfo.dislikesCount,
+            'extendedLikesInfo.statuses':
+              existingPost.extendedLikesInfo.statuses,
+            'extendedLikesInfo.newestLikes': latestLikes,
+          },
+        },
+      );
+      console.log('result:', result);
+      if (result === undefined) {
+        return undefined;
+      }
+      return result.modifiedCount === 1;
+    } catch (error) {
+      console.error('Error updating post:', error);
+
+      return undefined;
+    }
   }
   async deletePost(id: string): Promise<boolean> {
     return this.postsRepository.deletePost(id);

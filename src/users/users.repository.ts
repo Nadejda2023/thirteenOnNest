@@ -57,7 +57,11 @@ export class UserRepository {
     });
     return user || null;
   }
-
+  async createUser(userDTO: UsersModel): Promise<UsersModel> {
+    const smartUserModel = new this.userModel(userDTO);
+    await smartUserModel.save();
+    return smartUserModel;
+  }
   async updateConfirmation(id: string): Promise<boolean> {
     const result = await this.userModel.updateOne(
       { id: id },

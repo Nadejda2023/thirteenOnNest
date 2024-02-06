@@ -157,7 +157,7 @@ export class PostsController {
         ),
     );
 
-    const updatedPost = await this.postsQueryRepository.updatePostLikeStatus(
+    const updatedPost = await this.postsService.updatePostLikeStatus(
       existingPost,
       latestLikes,
     );
@@ -186,7 +186,7 @@ export class PostsController {
         return res.sendStatus(HttpStatus.NOT_FOUND);
       }
 
-      const comment = await this.postsQueryRepository.createPostComment(
+      const comment = await this.postsService.createPostComment(
         postWithId.id,
         req.body.content,
         { userId: req.user.id, userLogin: req.user.login },

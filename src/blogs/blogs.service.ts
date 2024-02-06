@@ -5,23 +5,22 @@ import { BlogDocument, Blogs, BlogsViewModel } from './dto/blogSchems';
 import { BlogsRepository } from './blogs.repository';
 import { BlogQueryRepo } from './blogs.query-repository';
 import { randomUUID } from 'crypto';
+import { UsersModel } from './dto/usersSchemas';
+import {
+  LikeStatus,
+  PostDocument,
+  PostViewModel2,
+  Posts,
+} from './dto/postSchema';
 
 @Injectable()
 export class BlogService {
   constructor(
     @InjectModel(Blogs.name) private blogModel: Model<BlogDocument>,
+    @InjectModel(Posts.name) private postModel: Model<PostDocument>,
     protected blogsRepository: BlogsRepository,
     protected blogQueryRepo: BlogQueryRepo,
   ) {}
-
-  // async create(createBlogDto: any): Promise<Blogs> {
-  //   const createdBlog = new this.blogModel(createBlogDto);
-  //   return createdBlog.save();
-  // }
-
-  // async findAll(): Promise<Blogs[]> {
-  //   return this.blogModel.find().exec();
-  // }
 
   async findAllBlogs(title: string | null | undefined): Promise<Blogs[]> {
     const filter = {};
@@ -69,6 +68,42 @@ export class BlogService {
       description,
       website,
     );
+  }
+  async createPostForBlog(
+    title: string,
+    shortDescription: string,
+    content: string,
+    blogId: string,
+    user: UsersModel | null,
+  ): Promise<PostViewModel2 | null> {
+    const blog = await this.blogsRepository.findBlogById(blogId);
+    if (!blog) return null;
+    const createPostForBlog: PostViewModel2 = {
+      id: randomUUID(),
+      title: title,
+      shortDescription: shortDescription,
+      content: content,
+      blogId: blog.id,
+      blogName: blog.name,
+      createdAt: new Date().toISOString(),
+      extendedLikesInfo: {
+        likesCount: 0,
+        dislikesCount: 0,
+        myStatus: LikeStatus.None,
+        newestLikes: user
+          ? [
+              {
+                addedAt: new Date().toISOString(),
+                userId: user.id,
+                login: user.login,
+              },
+            ]
+          : [],
+      },
+    };
+
+    await this.postModel.create(createPostForBlog);
+    return createPostForBlog;
   }
 
   async deleteBlog(_id: string) {

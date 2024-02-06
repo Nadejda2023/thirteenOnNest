@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import {
-  NewestLikeTypePost,
   PaginatedPost,
   PostDocument,
   PostViewModel2,
   Posts,
-  PostsDBModels,
 } from '../dto/postSchema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -14,11 +12,9 @@ import {
   CommentDB,
   CommentDocument,
   PaginatedCommentViewModel,
-  commentViewType,
 } from '../dto/commentSchemas';
 import { WithId } from 'mongodb';
 import { TPagination } from 'src/hellpers/pagination';
-import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -48,68 +44,6 @@ export class PostsQueryRepository {
       pageSize: pagination.pageSize,
       totalCount: totalCount,
       items: result,
-    };
-  }
-  async updatePostLikeStatus(
-    existingPost: PostsDBModels,
-    latestLikes: NewestLikeTypePost[],
-  ) {
-    console.log(JSON.stringify(existingPost));
-    try {
-      const result = await this.postModel.updateOne(
-        { id: existingPost.id },
-        {
-          $set: {
-            'extendedLikesInfo.likesCount':
-              existingPost.extendedLikesInfo.likesCount,
-            'extendedLikesInfo.dislikesCount':
-              existingPost.extendedLikesInfo.dislikesCount,
-            'extendedLikesInfo.statuses':
-              existingPost.extendedLikesInfo.statuses,
-            'extendedLikesInfo.newestLikes': latestLikes,
-          },
-        },
-      );
-      console.log('result:', result);
-      if (result === undefined) {
-        return undefined;
-      }
-      return result.modifiedCount === 1;
-    } catch (error) {
-      console.error('Error updating post:', error);
-
-      return undefined;
-    }
-  }
-
-  async createPostComment(
-    postId: string,
-    content: string,
-    commentatorInfo: { userId: string; userLogin: string },
-  ): Promise<commentViewType> {
-    const createCommentForPost = {
-      id: randomUUID(),
-      content,
-      commentatorInfo,
-      createdAt: new Date().toISOString(),
-      postId,
-      likesInfo: {
-        likesCount: 0,
-        dislikesCount: 0,
-        myStatus: 'None',
-      },
-    };
-    await this.commentModel.create(createCommentForPost);
-    return {
-      id: createCommentForPost.id,
-      content: createCommentForPost.content,
-      commentatorInfo: createCommentForPost.commentatorInfo,
-      createdAt: createCommentForPost.createdAt,
-      likesInfo: {
-        likesCount: createCommentForPost.likesInfo.likesCount,
-        dislikesCount: createCommentForPost.likesInfo.dislikesCount,
-        myStatus: createCommentForPost.likesInfo.myStatus,
-      },
     };
   }
 

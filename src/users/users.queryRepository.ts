@@ -40,12 +40,6 @@ export class UsersQueryRepository {
     };
   }
 
-  async createUser(userDTO: UsersModel): Promise<UsersModel> {
-    const smartUserModel = new this.userModel(userDTO);
-    await smartUserModel.save();
-    return smartUserModel;
-  }
-
   async findUserById(id: string): Promise<UsersModel | null> {
     const foundedUser = await this.userModel.findOne(
       { id: id },

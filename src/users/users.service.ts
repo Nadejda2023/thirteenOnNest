@@ -47,7 +47,7 @@ export class UserService {
       },
     };
 
-    await this.usersQueryRepository.createUser({ ...newUser });
+    await this.userRepository.createUser({ ...newUser });
 
     try {
       await this.emailService.sendEmail(
