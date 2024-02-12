@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { PaginatedUser, UsersModel } from 'src/blogs/dto/usersSchemas';
+import { PaginatedUser, UsersModel } from 'src/dto/usersSchemas';
 import { TUsersPagination } from 'src/hellpers/pagination';
 
 @Injectable()

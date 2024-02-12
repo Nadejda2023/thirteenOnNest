@@ -5,8 +5,8 @@ import {
   CommentDocument,
   PaginatedCommentViewModel,
   commentViewType,
-} from 'src/blogs/dto/commentSchemas';
-import { UsersModel } from 'src/blogs/dto/usersSchemas';
+} from 'src/dto/commentSchemas';
+import { UsersModel } from 'src/dto/usersSchemas';
 import { TPagination } from 'src/hellpers/pagination';
 import { WithId } from 'mongodb';
 import { InjectModel } from '@nestjs/mongoose';

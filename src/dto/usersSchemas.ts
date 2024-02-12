@@ -17,24 +17,24 @@ export class User {
   @Prop({ required: true })
   createdAt: string;
 
-  //   @Prop({ required: true })
-  //   passwordSalt: string;
+  @Prop({ required: true })
+  passwordSalt: string;
 
-  //   @Prop({ required: true })
-  //   passwordHash: string;
+  @Prop({ required: true })
+  passwordHash: string;
 
-  //   @Prop()
-  //   recoveryCode?: string;
+  @Prop()
+  recoveryCode?: string;
 
-  // @Prop({
-  //   required: true,
-  //   type: {
-  //     isConfirmed: Boolean,
-  //     confirmationCode: String,
-  //     expirationDate: Date,
-  //   },
-  // })
-  // emailConfirmation: EmailConfirmationType;
+  @Prop({
+    required: true,
+    type: {
+      isConfirmed: Boolean,
+      confirmationCode: String,
+      expirationDate: Date,
+    },
+  })
+  emailConfirmation: EmailConfirmationType;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -71,10 +71,10 @@ export type UsersModel = {
   login: string;
   email: string;
   createdAt: string;
-  //passwordSalt: string;
-  //passwordHash: string;
-  //recoveryCode?: string | undefined;
-  //emailConfirmation: EmailConfirmationType;
+  passwordSalt: string;
+  passwordHash: string;
+  recoveryCode?: string | undefined;
+  emailConfirmation: EmailConfirmationType;
   //refreshTokenBlackList: string[]
 };
 

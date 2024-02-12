@@ -11,7 +11,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './users.service';
-import { PaginatedUser, UsersModel } from 'src/blogs/dto/usersSchemas';
+import { PaginatedUser, UsersModel } from 'src/dto/usersSchemas';
 import { getUsersPagination } from 'src/hellpers/pagination';
 import { UsersQueryRepository } from './users.queryRepository';
 
@@ -24,8 +24,8 @@ export class UsersController {
 
   @Post()
   async createUser(@Req() req, @Res() res) {
-    const { login, email } = req.body;
-    const newUser = await this.usersService.createUser(login, email);
+    const { login, email, password } = req.body;
+    const newUser = await this.usersService.createUser(login, email, password);
 
     if (!newUser) {
       return res.status(HttpStatus.UNAUTHORIZED).send();

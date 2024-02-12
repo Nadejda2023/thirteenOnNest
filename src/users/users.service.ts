@@ -5,7 +5,7 @@ import {
   User,
   UserDocument,
   UsersModel,
-} from 'src/blogs/dto/usersSchemas';
+} from 'src/dto/usersSchemas';
 import { Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
@@ -27,19 +27,19 @@ export class UserService {
   async createUser(
     login: string,
     email: string,
-    //password: string,
+    password: string,
   ): Promise<CreateUserModel> {
-    // const passwordSalt = await bcrypt.genSalt(10);
-    // const passwordHash = await this._generateHash(password, passwordSalt);
+    const passwordSalt = await bcrypt.genSalt(10);
+    const passwordHash = await this._generateHash(password, passwordSalt);
 
     const newUser = {
       id: randomUUID(),
       login,
       email,
-      //passwordHash,
-      //passwordSalt,
+      passwordHash,
+      passwordSalt,
       createdAt: new Date().toISOString(),
-      //recoveryCode: uuidv4(),
+      recoveryCode: uuidv4(),
       emailConfirmation: {
         confirmationCode: uuidv4(),
         expirationDate: addMinutes(addHours(new Date(), 1), 2),
@@ -88,7 +88,7 @@ export class UserService {
     return foundedUser;
   }
 
-  async generateHash(password: string, salt: string) {
+  async _generateHash(password: string, salt: string) {
     const hash = await bcrypt.hash(password, salt);
     return hash;
   }

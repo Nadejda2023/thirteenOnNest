@@ -5,18 +5,18 @@ import { AppService } from './app.service';
 //import { ConfigModule } from '@nestjs/config';
 import { UsersController } from './users/users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { BlogSchema, Blogs } from './blogs/dto/blogSchems';
+import { BlogSchema, Blogs } from './dto/blogSchems';
 import { BlogService } from './blogs/blogs.service';
 import { BlogsController } from './blogs/blogs.controller';
 import { BlogsRepository } from './blogs/blogs.repository';
 import { BlogQueryRepo } from './blogs/blogs.query-repository';
-import { Posts, PostSchema } from './blogs/dto/postSchema';
-import { User, UserSchema } from './blogs/dto/usersSchemas';
-import { Comment, CommentSchema } from './blogs/dto/commentSchemas';
-import { PostsController } from './blogs/posts/posts.controller';
-import { PostService } from './blogs/posts/posts.service';
-import { PostsQueryRepository } from './blogs/posts/posts.query-repository';
-import { PostsRepository } from './blogs/posts/posts.repository';
+import { Posts, PostSchema } from './dto/postSchema';
+import { User, UserSchema } from './dto/usersSchemas';
+import { Comment, CommentSchema } from './dto/commentSchemas';
+import { PostsController } from './posts/posts.controller';
+import { PostService } from './posts/posts.service';
+import { PostsQueryRepository } from './posts/posts.query-repository';
+import { PostsRepository } from './posts/posts.repository';
 import { CommentController } from './comment/comment.controller';
 import { CommentService } from './comment/comment.service';
 import { UsersQueryRepository } from './users/users.queryRepository';
@@ -27,6 +27,9 @@ import { CommentRepository } from './comment/comment.repository';
 import { TestingService } from './Test-All-Data/testing.service';
 import { TestingRepository } from './Test-All-Data/test-all-data.repository';
 import { TestingController } from './Test-All-Data/testing.controller';
+import { AuthService } from './auth/auth.service';
+import { AuthRepository } from './auth/auth.repository';
+import { AuthController } from './auth/auth.controller';
 
 dotenv.config();
 // export class AppModule {}
@@ -56,6 +59,7 @@ dotenv.config();
     CommentController,
     TestingController,
     UsersController,
+    AuthController,
   ],
   providers: [
     AppService,
@@ -70,9 +74,11 @@ dotenv.config();
     UserService,
     UserRepository,
     UsersQueryRepository,
-    EmailService,
     TestingRepository,
     TestingService,
+    AuthRepository,
+    AuthService,
+    EmailService,
   ],
   exports: [EmailService, CommentRepository],
 })

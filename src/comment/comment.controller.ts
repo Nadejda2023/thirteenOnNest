@@ -6,7 +6,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { commentViewType } from 'src/blogs/dto/commentSchemas';
+import { commentViewType } from 'src/dto/commentSchemas';
 import { CommentService } from './comment.service';
 import { CommentRepository } from './comment.repository';
 

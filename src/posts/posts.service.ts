@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostsRepository } from './posts.repository';
-import { BlogsRepository } from '../blogs.repository';
+import { BlogsRepository } from '../blogs/blogs.repository';
 import {
   CreateAndUpdatePostDto,
   LikeStatus,

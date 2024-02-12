@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { BlogDocument, Blogs, BlogsViewModel } from './dto/blogSchems';
+import { BlogDocument, Blogs, BlogsViewModel } from '../dto/blogSchems';
 import { BlogsRepository } from './blogs.repository';
 import { BlogQueryRepo } from './blogs.query-repository';
 import { randomUUID } from 'crypto';
-import { UsersModel } from './dto/usersSchemas';
+import { UsersModel } from '../dto/usersSchemas';
 import {
   LikeStatus,
   PostDocument,
   PostViewModel2,
   Posts,
-} from './dto/postSchema';
+} from '../dto/postSchema';
 
 @Injectable()
 export class BlogService {

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BlogDocument, Blogs } from 'src/blogs/dto/blogSchems';
-import { CommentDocument } from 'src/blogs/dto/commentSchemas';
-import { PostDocument, Posts } from 'src/blogs/dto/postSchema';
-import { User, UserDocument } from 'src/blogs/dto/usersSchemas';
+import { BlogDocument, Blogs } from 'src/dto/blogSchems';
+import { CommentDocument } from 'src/dto/commentSchemas';
+import { PostDocument, Posts } from 'src/dto/postSchema';
+import { User, UserDocument } from 'src/dto/usersSchemas';
 
 @Injectable()
 export class TestingRepository {

@@ -30,8 +30,8 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../dto/usersSchemas';
 import { PostsRepository } from './posts.repository';
-import { BlogQueryRepo } from '../blogs.query-repository';
-import { BlogsRepository } from '../blogs.repository';
+import { BlogQueryRepo } from '../blogs/blogs.query-repository';
+import { BlogsRepository } from '../blogs/blogs.repository';
 
 @Controller('posts')
 export class PostsController {
