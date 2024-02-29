@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UsersModel } from 'src/dto/usersSchemas';
+import { UsersModel } from 'src/models/usersSchemas';
 
 @Injectable()
 export class UserRepository {
@@ -22,6 +22,14 @@ export class UserRepository {
   async findUserByEmail(email: string) {
     const user = await this.userModel.findOne({ email });
     return user;
+  }
+  async updateRecoveryPasswordInfo(userId: string, recoveryCode: string) {
+    return this.userModel.updateOne(
+      { userId },
+      {
+        $set: { recoveryCode },
+      },
+    );
   }
 
   async findByLoginU(login: string) {
@@ -70,12 +78,8 @@ export class UserRepository {
     return result.modifiedCount === 1;
   }
 
-  async updateCode(
-    id: string,
-    code: string,
-    expirationDate: Date,
-  ): Promise<boolean> {
-    const result = await this.userModel.updateOne(
+  async updateCode(id: string, code: string, expirationDate: Date) {
+    return this.userModel.updateOne(
       { id: id },
       {
         $set: {
@@ -84,7 +88,6 @@ export class UserRepository {
         },
       },
     );
-    return result.modifiedCount === 1;
   }
   async deleteAll(): Promise<boolean> {
     try {

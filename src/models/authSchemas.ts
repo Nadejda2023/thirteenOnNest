@@ -21,7 +21,7 @@ export class AuthViewModelType {
 }
 export type AuthDocument = HydratedDocument<Auth>;
 @Schema()
-export class Auth extends Document {
+export class Auth {
   @Prop({ required: true })
   email: string;
 

@@ -65,6 +65,18 @@ export class UserType {
     public recoveryCode?: string | undefined,
   ) {}
 }
+export class UserViewModel {
+  id: string;
+  login: string;
+  email: string;
+  createdAt: string;
+  constructor(id: string, login: string, email: string, createdAt: string) {
+    this.id = id;
+    this.login = login;
+    this.email = email;
+    this.createdAt = createdAt;
+  }
+}
 
 export type UsersModel = {
   id: string;
@@ -83,12 +95,6 @@ export type EmailConfirmationType = {
   isConfirmed: boolean;
   confirmationCode: string;
   expirationDate: Date;
-};
-
-export type UsersInputModel = {
-  login: string;
-  password: string;
-  email: string;
 };
 
 export type CreateUserModel = {

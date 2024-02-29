@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AuthRepository } from 'src/auth/auth.repository';
-import { UsersModel } from 'src/dto/usersSchemas';
+import { UsersModel } from 'src/models/usersSchemas';
 import * as jwt from 'jsonwebtoken';
 import { accessTokenSecret1, refreshTokenSecret2, settings } from 'src/main';
 import { Model } from 'mongoose';

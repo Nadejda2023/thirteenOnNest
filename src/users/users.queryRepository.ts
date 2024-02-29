@@ -1,18 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { PaginatedUser, UsersModel } from 'src/dto/usersSchemas';
+import {
+  PaginatedUser,
+  UserDocument,
+  UserViewModel,
+  UsersModel,
+} from 'src/models/usersSchemas';
 import { TUsersPagination } from 'src/hellpers/pagination';
 
 @Injectable()
 export class UsersQueryRepository {
   constructor(
-    @InjectModel('User') private readonly userModel: Model<UsersModel>,
+    @InjectModel('User') private readonly userModel: Model<UserDocument>,
   ) {}
 
+  async findUserByPasswordRecoveryCode(
+    recoveryCode: string,
+  ): Promise<UsersModel | null> {
+    return this.userModel.findOne({ recoveryCode });
+  }
   async findUsers(
     pagination: TUsersPagination,
-  ): Promise<PaginatedUser<UsersModel>> {
+  ): Promise<PaginatedUser<UserViewModel>> {
     const filter = {
       $or: [
         { email: { $regex: pagination.searchEmailTerm, $options: 'i' } },
@@ -36,7 +46,10 @@ export class UsersQueryRepository {
       page: pagination.pageNumber,
       pageSize: pagination.pageSize,
       totalCount: totalCount,
-      items: result,
+      items: result.map(
+        (user) =>
+          new UserViewModel(user.id, user.login, user.email, user.createdAt),
+      ),
     };
   }
 
@@ -63,7 +76,10 @@ export class UsersQueryRepository {
     });
     return user;
   }
-
+  async findByLogin(login: string): Promise<UsersModel | null> {
+    const user = await this.userModel.findOne({ login: login });
+    return user;
+  }
   async findUserByEmail(email: string): Promise<UsersModel | null> {
     const user = await this.userModel.findOne({ email: email });
     return user;

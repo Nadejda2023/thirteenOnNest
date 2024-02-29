@@ -9,8 +9,8 @@ import {
   PostViewModel2,
   Posts,
   PostsDBModels,
-} from '../dto/postSchema';
-import { UsersModel } from '../dto/usersSchemas';
+} from '../models/postSchema';
+import { UsersModel } from '../models/usersSchemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PostsQueryRepository } from './posts.query-repository';
@@ -19,7 +19,7 @@ import {
   Comment,
   CommentDocument,
   commentViewType,
-} from '../dto/commentSchemas';
+} from '../models/commentSchemas';
 
 @Injectable()
 export class PostService {

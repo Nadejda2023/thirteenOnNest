@@ -5,14 +5,14 @@ import { AppService } from './app.service';
 //import { ConfigModule } from '@nestjs/config';
 import { UsersController } from './users/users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { BlogSchema, Blogs } from './dto/blogSchems';
+import { BlogSchema, Blogs } from './models/blogSchems';
 import { BlogService } from './blogs/blogs.service';
 import { BlogsController } from './blogs/blogs.controller';
 import { BlogsRepository } from './blogs/blogs.repository';
 import { BlogQueryRepo } from './blogs/blogs.query-repository';
-import { Posts, PostSchema } from './dto/postSchema';
-import { User, UserSchema } from './dto/usersSchemas';
-import { Comment, CommentSchema } from './dto/commentSchemas';
+import { Posts, PostSchema } from './models/postSchema';
+import { User, UserSchema } from './models/usersSchemas';
+import { Comment, CommentSchema } from './models/commentSchemas';
 import { PostsController } from './posts/posts.controller';
 import { PostService } from './posts/posts.service';
 import { PostsQueryRepository } from './posts/posts.query-repository';
@@ -30,6 +30,13 @@ import { TestingController } from './Test-All-Data/testing.controller';
 import { AuthService } from './auth/auth.service';
 import { AuthRepository } from './auth/auth.repository';
 import { AuthController } from './auth/auth.controller';
+import { AuthGuard } from './guards/auth.middleware';
+import { Auth, AuthSchema } from './models/authSchemas';
+import { JwtService } from './application/jwt.service';
+import { AuthorizationGuard } from './guards/auth.basic.guard';
+import { UserEmailExistsValidator } from './customValidate/user.email.exists.validator';
+import { UserLoginExistsValidator } from './customValidate/user.login.exist.valdator';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 dotenv.config();
 // export class AppModule {}
@@ -50,6 +57,13 @@ dotenv.config();
     MongooseModule.forFeature([{ name: Posts.name, schema: PostSchema }]),
     MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 5,
+      },
+    ]),
   ],
   controllers: [
     AppController,
@@ -79,6 +93,11 @@ dotenv.config();
     AuthRepository,
     AuthService,
     EmailService,
+    AuthGuard,
+    JwtService,
+    AuthorizationGuard,
+    UserLoginExistsValidator,
+    UserEmailExistsValidator,
   ],
   exports: [EmailService, CommentRepository],
 })

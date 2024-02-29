@@ -4,15 +4,15 @@ import {
   PostDocument,
   PostViewModel2,
   Posts,
-} from '../dto/postSchema';
+} from '../models/postSchema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Comment } from '../dto/commentSchemas';
+import { Comment } from '../models/commentSchemas';
 import {
   CommentDB,
   CommentDocument,
   PaginatedCommentViewModel,
-} from '../dto/commentSchemas';
+} from '../models/commentSchemas';
 import { WithId } from 'mongodb';
 import { TPagination } from 'src/hellpers/pagination';
 

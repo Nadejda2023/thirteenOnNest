@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common';
 import { BlogService } from './blogs.service';
 import { BlogQueryRepo } from './blogs.query-repository';
-import { BlogsViewModel, PaginatedBlog } from '../dto/blogSchems';
+import { BlogsViewModel, PaginatedBlog } from '../models/blogSchems';
 import {
   getPaginationFromQuery,
   getSearchNameTermFromQuery,
 } from 'src/hellpers/pagination';
-import { PaginatedPost, PostViewModel2 } from '../dto/postSchema';
+import { PaginatedPost, PostViewModel2 } from '../models/postSchema';
 import { BlogsRepository } from './blogs.repository';
 
 @Controller('blogs')

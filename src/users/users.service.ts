@@ -5,7 +5,7 @@ import {
   User,
   UserDocument,
   UsersModel,
-} from 'src/dto/usersSchemas';
+} from 'src/models/usersSchemas';
 import { Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
@@ -14,6 +14,7 @@ import { UsersQueryRepository } from './users.queryRepository';
 import { randomUUID } from 'crypto';
 import { EmailService } from 'src/adapters/email-adapter';
 import { addHours, addMinutes } from 'date-fns';
+import { UsersInputDto } from 'src/models/input/create-user.input-dto';
 
 @Injectable()
 export class UserService {
@@ -24,18 +25,17 @@ export class UserService {
     protected emailService: EmailService,
   ) {}
 
-  async createUser(
-    login: string,
-    email: string,
-    password: string,
-  ): Promise<CreateUserModel> {
+  async createUser(inputModel: UsersInputDto): Promise<CreateUserModel> {
     const passwordSalt = await bcrypt.genSalt(10);
-    const passwordHash = await this._generateHash(password, passwordSalt);
+    const passwordHash = await this._generateHash(
+      inputModel.password,
+      passwordSalt,
+    );
 
     const newUser = {
       id: randomUUID(),
-      login,
-      email,
+      login: inputModel.login,
+      email: inputModel.email,
       passwordHash,
       passwordSalt,
       createdAt: new Date().toISOString(),
@@ -61,10 +61,15 @@ export class UserService {
 
     return {
       id: newUser.id,
-      login,
+      login: newUser.login,
       createdAt: newUser.createdAt,
       email: newUser.email,
     };
+  }
+  async recoveryPassword(userId) {
+    const recoveryCode = randomUUID();
+    await this.userRepository.updateRecoveryPasswordInfo(userId, recoveryCode);
+    return recoveryCode;
   }
 
   async findUserById(id: string): Promise<UsersModel | null> {

@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BlogDocument, Blogs } from 'src/dto/blogSchems';
-import { CommentDocument } from 'src/dto/commentSchemas';
-import { PostDocument, Posts } from 'src/dto/postSchema';
-import { User, UserDocument } from 'src/dto/usersSchemas';
+import { Auth, AuthDocument } from 'src/models/authSchemas';
+import { BlogDocument, Blogs } from 'src/models/blogSchems';
+import { CommentDocument } from 'src/models/commentSchemas';
+import { PostDocument, Posts } from 'src/models/postSchema';
+import { User, UserDocument } from 'src/models/usersSchemas';
 
 @Injectable()
 export class TestingRepository {
@@ -15,6 +16,8 @@ export class TestingRepository {
     @InjectModel(Posts.name) private readonly postModel: Model<PostDocument>,
     @InjectModel('Comment')
     private readonly commentModel: Model<CommentDocument>,
+    @InjectModel(Auth.name)
+    private readonly authModel: Model<AuthDocument>,
   ) {}
 
   // private readonly blogService: BlogService,
@@ -38,6 +41,7 @@ export class TestingRepository {
       await this.blogModel.deleteMany({});
       await this.postModel.deleteMany({});
       await this.commentModel.deleteMany({});
+      await this.authModel.deleteMany({});
       return true;
     } catch (e) {
       return false;

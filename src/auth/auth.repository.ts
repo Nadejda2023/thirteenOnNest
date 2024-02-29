@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
 import { Model } from 'mongoose';
 import { EmailService } from 'src/adapters/email-adapter';
-import { AuthDocument, AuthViewModel } from 'src/dto/authSchemas';
-import { WithId } from 'src/dto/postSchema';
-import { CreateUserModel, UserType, UsersModel } from 'src/dto/usersSchemas';
+import { AuthDocument, AuthViewModel } from 'src/models/authSchemas';
+import { WithId } from 'src/models/postSchema';
+import { CreateUserModel, UserType, UsersModel } from 'src/models/usersSchemas';
 import { accessTokenSecret1, refreshTokenSecret2 } from 'src/main';
 import { UsersQueryRepository } from 'src/users/users.queryRepository';
 import { UserRepository } from 'src/users/users.repository';
@@ -51,8 +51,9 @@ export class AuthRepository {
 
   async ressendingEmail(email: string): Promise<boolean | null> {
     const user = await this.userRepository.findUserByEmail(email);
-    if (!user) return false;
-    if (user.emailConfirmation.isConfirmed) return false;
+    if (!user) throw new BadRequestException('userNotExist');
+    if (user.emailConfirmation.isConfirmed)
+      throw new BadRequestException('codeAlreadyConfirmed');
 
     const confirmationCode = randomUUID();
     const expiritionDate = add(new Date(), {
@@ -188,7 +189,7 @@ export class AuthRepository {
         newUser.email,
         'code',
         newUser.emailConfirmation.confirmationCode,
-      ); //сделаиь метод для отправки письма
+      );
     } catch (error) {
       console.error('create email error:', error);
     }

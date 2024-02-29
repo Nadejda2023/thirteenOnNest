@@ -5,9 +5,9 @@ import {
   PostViewModel2,
   Posts,
   PostsDBModels,
-} from '../dto/postSchema';
+} from '../models/postSchema';
 import { Model } from 'mongoose';
-import { UsersModel } from '../dto/usersSchemas';
+import { UsersModel } from '../models/usersSchemas';
 
 @Injectable()
 export class PostsRepository {

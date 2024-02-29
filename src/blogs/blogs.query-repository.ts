@@ -5,7 +5,7 @@ import {
   Blogs,
   BlogsViewModel,
   PaginatedBlog,
-} from '../dto/blogSchems';
+} from '../models/blogSchems';
 import { Model } from 'mongoose';
 import { WithId } from 'mongodb';
 import { TPagination } from 'src/hellpers/pagination';
@@ -16,8 +16,8 @@ import {
   PostViewModel2,
   Posts,
   PostsDBModels,
-} from '../dto/postSchema';
-import { UsersModel } from '../dto/usersSchemas';
+} from '../models/postSchema';
+import { UsersModel } from '../models/usersSchemas';
 import { BlogsRepository } from './blogs.repository';
 import { randomUUID } from 'crypto';
 

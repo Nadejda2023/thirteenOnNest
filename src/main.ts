@@ -1,6 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as express from 'express';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './exception.filter';
+import cookieParser from 'cookie-parser';
+import { useContainer } from 'class-validator';
 
 export const settings = {
   MONGO_URI:
@@ -16,6 +20,31 @@ async function bootstrap() {
   app.enableCors();
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      stopAtFirstError: true,
+      exceptionFactory: (errors: any[]) => {
+        const errorsForResponse: { message: string; field: string }[] = [];
+
+        errors.forEach((e) => {
+          const constraintsKeys = Object.keys(e.constraints);
+          constraintsKeys.forEach((ckey) => {
+            errorsForResponse.push({
+              message: e.constraints[ckey],
+              field: e.property,
+            });
+          });
+        });
+        throw new BadRequestException(errorsForResponse);
+      },
+    }),
+  ); //добавила глобально здесь пайп{ transform: true }
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.use(cookieParser());
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
+  //app.useGlobalGuards();
   await app.listen(3338);
 }
 bootstrap();
