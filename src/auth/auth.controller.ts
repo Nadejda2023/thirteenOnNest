@@ -160,11 +160,11 @@ export class AuthController {
   }
   @Throttle({})
   @Post('registration-confirmation')
-  //@HttpCode(204)
+  @HttpCode(204)
   async createRegistrationConfirmation(
     @Body() registrationConfirmationDto: RegistrationConfirmationDto,
   ) {
-    const result = this.authRepository.confirmUserEmail(
+    const result = await this.authRepository.confirmUserEmail(
       registrationConfirmationDto.code,
     );
 
@@ -173,7 +173,7 @@ export class AuthController {
       throw new BadRequestException([
         {
           message: 'some error occured',
-          field: 'some field where error occured',
+          field: 'code',
         },
       ]); //
       // } else {

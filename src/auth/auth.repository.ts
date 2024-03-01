@@ -58,11 +58,13 @@ export class AuthRepository {
       //if (!user) throw new BadRequestException('user');
       console.log('user find by confirmation code', user);
       if (!user) throw new BadRequestException('3');
-      if (user.emailConfirmation.isConfirmed)
+      if (user.emailConfirmation.isConfirmed) {
         throw new BadRequestException('4');
+      }
       await this.userRepository.updateConfirmation(user.id);
     } catch (error) {
       console.log('error', error);
+      return false;
     }
     return true;
   }
