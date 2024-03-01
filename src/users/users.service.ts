@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserRepository } from './users.repository';
 import {
   CreateUserModel,
@@ -47,7 +47,8 @@ export class UserService {
       },
     };
 
-    await this.userRepository.createUser({ ...newUser });
+    const result = await this.userRepository.createUser({ ...newUser });
+    if (!result) throw new BadRequestException(); //
 
     try {
       await this.emailService.sendEmail(

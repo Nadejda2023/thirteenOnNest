@@ -47,11 +47,12 @@ export class UserRepository {
     return result || null;
   }
 
-  async findUserByConfirmationCode(code: string): Promise<UsersModel | null> {
+  async findUserByConfirmationCode(code: string) {
     try {
       const user = await this.userModel.findOne({
         'emailConfirmation.confirmationCode': code,
       });
+      console.log('result user', user);
       return user || null;
     } catch (error) {
       console.error('Error finding user by confirmation code:', error);
@@ -65,17 +66,17 @@ export class UserRepository {
     });
     return user || null;
   }
-  async createUser(userDTO: UsersModel): Promise<UsersModel> {
+  async createUser(userDTO: UsersModel) {
     const smartUserModel = new this.userModel(userDTO);
     await smartUserModel.save();
     return smartUserModel;
   }
-  async updateConfirmation(id: string): Promise<boolean> {
-    const result = await this.userModel.updateOne(
-      { id: id },
+  async updateConfirmation(userId: string) {
+    console.log('userId', userId);
+    return this.userModel.updateOne(
+      { id: userId },
       { $set: { 'emailConfirmation.isConfirmed': true } },
     );
-    return result.modifiedCount === 1;
   }
 
   async updateCode(id: string, code: string, expirationDate: Date) {

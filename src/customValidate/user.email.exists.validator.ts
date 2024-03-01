@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import {
   //ValidationArguments,
@@ -17,7 +17,12 @@ export class UserEmailExistsValidator implements ValidatorConstraintInterface {
       const user = await this.userQueryRepository.findUserByEmail(email);
       if (user) {
         console.log(user);
-        return false;
+        throw new BadRequestException([
+          {
+            message: 'this email found in base',
+            field: 'email',
+          },
+        ]);
       } else {
         return true;
       } // Вернуть true, если пользователь не найден

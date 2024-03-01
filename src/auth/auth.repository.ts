@@ -36,24 +36,53 @@ export class AuthRepository {
     return result.acknowledged === true;
   }
 
-  async confirmEmail(code: string): Promise<boolean> {
+  async confirmEmail(code: string) {
     const user = await this.userRepository.findUserByConfirmationCode(code);
-    if (!user) return false;
+    if (!user) throw new BadRequestException('userNotExist');
 
-    if (user.emailConfirmation.isConfirmed) return false;
-    if (user.emailConfirmation.confirmationCode !== code) return false;
-    if (user.emailConfirmation.expirationDate < new Date()) return false;
+    if (user.emailConfirmation.isConfirmed)
+      throw new BadRequestException('codeAlreadyConfirmed');
+    if (user.emailConfirmation.confirmationCode !== code)
+      throw new BadRequestException('3');
+    if (user.emailConfirmation.expirationDate < new Date())
+      throw new BadRequestException('4');
 
     const result = await this.userRepository.updateConfirmation(user.id);
 
     return result;
   }
+  async confirmUserEmail(code: string) {
+    console.log(code);
+    try {
+      const user = await this.userRepository.findUserByConfirmationCode(code);
+      //if (!user) throw new BadRequestException('user');
+      console.log('user find by confirmation code', user);
+      if (!user) throw new BadRequestException('3');
+      if (user.emailConfirmation.isConfirmed)
+        throw new BadRequestException('4');
+      await this.userRepository.updateConfirmation(user.id);
+    } catch (error) {
+      console.log('error', error);
+    }
+    return true;
+  }
 
   async ressendingEmail(email: string): Promise<boolean | null> {
     const user = await this.userRepository.findUserByEmail(email);
-    if (!user) throw new BadRequestException('userNotExist');
+    if (!user)
+      throw new BadRequestException([
+        {
+          message: 'this email found in base',
+          field: 'email',
+        },
+      ]); //
     if (user.emailConfirmation.isConfirmed)
-      throw new BadRequestException('codeAlreadyConfirmed');
+      throw new BadRequestException([
+        {
+          message: 'email found in base and comfirm',
+          field: 'email',
+        },
+      ]); //
 
     const confirmationCode = randomUUID();
     const expiritionDate = add(new Date(), {

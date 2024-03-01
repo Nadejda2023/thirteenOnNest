@@ -52,8 +52,8 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const user = await this.authRepository.checkCredentials(
-      req.body.loginOrEmail,
-      req.body.password,
+      loginDto.loginOrEmail,
+      loginDto.password,
     );
     if (user) {
       const deviceId = randomUUID();
@@ -78,7 +78,12 @@ export class AuthController {
 
       return { accessToken };
     } else {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException([
+        {
+          message: '401',
+          field: 'not',
+        },
+      ]);
     }
   }
   @Throttle({})
@@ -153,19 +158,26 @@ export class AuthController {
       res.status(500).json({ message: '' });
     }
   }
-  @Post('registration-confirmation')
   @Throttle({})
-  @HttpCode(204)
+  @Post('registration-confirmation')
+  //@HttpCode(204)
   async createRegistrationConfirmation(
     @Body() registrationConfirmationDto: RegistrationConfirmationDto,
   ) {
-    const result = this.authRepository.confirmEmail(
+    const result = this.authRepository.confirmUserEmail(
       registrationConfirmationDto.code,
     );
+
+    console.log('result', result);
     if (!result) {
-      throw new BadRequestException('something wrong!');
-    } else {
-      return;
+      throw new BadRequestException([
+        {
+          message: 'some error occured',
+          field: 'some field where error occured',
+        },
+      ]); //
+      // } else {
+      //   return;
     }
   }
   @Post('registration')
