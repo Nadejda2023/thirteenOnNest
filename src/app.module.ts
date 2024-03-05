@@ -3,40 +3,45 @@ import dotenv from 'dotenv';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 //import { ConfigModule } from '@nestjs/config';
-import { UsersController } from './users/users.controller';
+import { UsersController } from './modules/users/users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BlogSchema, Blogs } from './models/blogSchems';
-import { BlogService } from './blogs/blogs.service';
-import { BlogsController } from './blogs/blogs.controller';
-import { BlogsRepository } from './blogs/blogs.repository';
-import { BlogQueryRepo } from './blogs/blogs.query-repository';
+import { BlogService } from './modules/blogs/blogs.service';
+import { BlogsController } from './modules/blogs/blogs.controller';
+import { BlogsRepository } from './modules/blogs/blogs.repository';
+import { BlogQueryRepo } from './modules/blogs/blogs.query-repository';
 import { Posts, PostSchema } from './models/postSchema';
 import { User, UserSchema } from './models/usersSchemas';
 import { Comment, CommentSchema } from './models/commentSchemas';
-import { PostsController } from './posts/posts.controller';
-import { PostService } from './posts/posts.service';
-import { PostsQueryRepository } from './posts/posts.query-repository';
-import { PostsRepository } from './posts/posts.repository';
-import { CommentController } from './comment/comment.controller';
-import { CommentService } from './comment/comment.service';
-import { UsersQueryRepository } from './users/users.queryRepository';
-import { UserRepository } from './users/users.repository';
-import { UserService } from './users/users.service';
+import { PostsController } from './modules/posts/posts.controller';
+import { PostService } from './modules/posts/posts.service';
+import { PostsQueryRepository } from './modules/posts/posts.query-repository';
+import { PostsRepository } from './modules/posts/posts.repository';
+import { CommentController } from './modules/comment/comment.controller';
+import { CommentService } from './modules/comment/comment.service';
+import { UsersQueryRepository } from './modules/users/users.queryRepository';
+import { UserRepository } from './modules/users/users.repository';
+import { UserService } from './modules/users/users.service';
 import { EmailService } from './adapters/email-adapter';
-import { CommentRepository } from './comment/comment.repository';
+import { CommentRepository } from './modules/comment/comment.repository';
 import { TestingService } from './Test-All-Data/testing.service';
 import { TestingRepository } from './Test-All-Data/test-all-data.repository';
 import { TestingController } from './Test-All-Data/testing.controller';
-import { AuthService } from './auth/auth.service';
-import { AuthRepository } from './auth/auth.repository';
-import { AuthController } from './auth/auth.controller';
+import { AuthService } from './modules/auth/auth.service';
+import { AuthRepository } from './modules/auth/auth.repository';
+import { AuthController } from './modules/auth/auth.controller';
 import { AuthGuard } from './guards/auth.middleware';
 import { Auth, AuthSchema } from './models/authSchemas';
-import { JwtService } from './application/jwt.service';
+import { JwtService } from './modules/auth/application/jwt.service';
 import { AuthorizationGuard } from './guards/auth.basic.guard';
 import { UserEmailExistsValidator } from './customValidate/user.email.exists.validator';
 import { UserLoginExistsValidator } from './customValidate/user.login.exist.valdator';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { DeviceModule } from './modules/device/device.module';
+import { Device, DeviceSchema } from './models/deviceSchemas';
+import { DeviceService } from './modules/device/device.service';
+import { DeviceController } from './modules/device/device.controller';
+import { DeviceRepository } from './modules/device/device.repository';
 
 dotenv.config();
 // export class AppModule {}
@@ -58,12 +63,14 @@ dotenv.config();
     MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
+    MongooseModule.forFeature([{ name: Device.name, schema: DeviceSchema }]),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
         limit: 5,
       },
     ]),
+    DeviceModule,
   ],
   controllers: [
     AppController,
@@ -74,6 +81,7 @@ dotenv.config();
     TestingController,
     UsersController,
     AuthController,
+    DeviceController,
   ],
   providers: [
     AppService,
@@ -98,6 +106,8 @@ dotenv.config();
     AuthorizationGuard,
     UserLoginExistsValidator,
     UserEmailExistsValidator,
+    DeviceService,
+    DeviceRepository,
   ],
   exports: [EmailService, CommentRepository],
 })

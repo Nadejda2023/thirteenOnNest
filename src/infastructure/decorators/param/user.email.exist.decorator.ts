@@ -1,5 +1,5 @@
 import { ValidationOptions, registerDecorator } from 'class-validator';
-import { UserEmailExistsValidator } from 'src/customValidate/user.email.exists.validator';
+import { UserEmailExistsValidator } from '../../../customValidate/user.email.exists.validator';
 
 export function UserEmailExist(validationOptions?: ValidationOptions) {
   return function (object: any, propertyName: string) {

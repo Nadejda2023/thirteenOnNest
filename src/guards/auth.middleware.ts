@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { JwtService } from 'src/application/jwt.service';
-import { User, UserDocument } from 'src/models/usersSchemas';
+import { User, UserDocument } from '../models/usersSchemas';
+import { JwtService } from '../modules/auth/application/jwt.service';
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

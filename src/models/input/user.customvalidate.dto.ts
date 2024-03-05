@@ -1,6 +1,6 @@
 import { IsEmail, IsString, Length } from 'class-validator';
-import { UserEmailExist } from 'src/infastructure/decorators/param/user.email.exist.decorator';
-import { UserLoginExist } from 'src/infastructure/decorators/param/user.login.exist.decorator';
+import { UserEmailExist } from '../../infastructure/decorators/param/user.email.exist.decorator';
+import { UserLoginExist } from '../../infastructure/decorators/param/user.login.exist.decorator';
 
 export class UsersValidateDto {
   //@Trim()

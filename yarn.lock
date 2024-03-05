@@ -759,6 +759,11 @@
     "@types/jsonwebtoken" "9.0.5"
     jsonwebtoken "9.0.2"
 
+"@nestjs/mapped-types@*":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@nestjs/mapped-types/-/mapped-types-2.0.5.tgz#485d6b44e19779c98d04e52bd1d2bcc7001df0ea"
+  integrity sha512-bSJv4pd6EY99NX9CjBIyn4TVDoSit82DUZlL4I3bqNfy5Gt+gXTa86i3I/i0iIV9P4hntcGM5GyO+FhZAhxtyg==
+
 "@nestjs/mongoose@^10.0.2":
   version "10.0.2"
   resolved "https://registry.npmmirror.com/@nestjs/mongoose/-/mongoose-10.0.2.tgz"
@@ -4105,7 +4110,7 @@ mongodb-memory-server-core@9.1.6:
 
 mongodb-memory-server@^9.1.6:
   version "9.1.6"
-  resolved "https://registry.npmmirror.com/mongodb-memory-server/-/mongodb-memory-server-9.1.6.tgz"
+  resolved "https://registry.yarnpkg.com/mongodb-memory-server/-/mongodb-memory-server-9.1.6.tgz#31b63996b2670e0e4a98d138e6abc7c2fbeca3d3"
   integrity sha512-gzcpgGYlPhuKmria37W+bvYy6W+OkX2UVG7MoP41OWFvQv2Hn7A+fLXkV+lsMmhog1lMQprdV6AR+gixgheLaw==
   dependencies:
     mongodb-memory-server-core "9.1.6"
