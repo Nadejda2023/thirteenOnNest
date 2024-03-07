@@ -42,16 +42,15 @@ import { Device, DeviceSchema } from './models/deviceSchemas';
 import { DeviceService } from './modules/device/device.service';
 import { DeviceController } from './modules/device/device.controller';
 import { DeviceRepository } from './modules/device/device.repository';
+import { ConfigModule } from '@nestjs/config';
+import configuration from './configuration/configuration';
+import { UpdatePostLikeStatusUseCase } from './modules/posts/usecase/post_like_status_use_case';
 
 dotenv.config();
-// export class AppModule {}
-// export class CommentModule {}
-// export class EmailModule {}
+
 @Module({
   imports: [
-    // ConfigModule.forRoot({
-    //   isGlobal: true, // Делаем доступным во всем приложении
-    // }),
+    ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     MongooseModule.forRoot(process.env.MONGO_URL || ''),
     MongooseModule.forFeature([
       {
@@ -108,6 +107,7 @@ dotenv.config();
     UserEmailExistsValidator,
     DeviceService,
     DeviceRepository,
+    UpdatePostLikeStatusUseCase,
   ],
   exports: [EmailService, CommentRepository],
 })

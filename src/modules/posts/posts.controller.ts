@@ -32,16 +32,20 @@ import { PostsRepository } from './posts.repository';
 import { BlogQueryRepo } from '../blogs/blogs.query-repository';
 import { BlogsRepository } from '../blogs/blogs.repository';
 import { getPaginationFromQuery } from '../../hellpers/pagination';
+import { CommandBus } from '@nestjs/cqrs';
+import { UpdatePostLikeStatusCommand } from './usecase/post_like_status_use_case';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private commandBus: CommandBus,
     protected postsService: PostService,
     private postsRepository: PostsRepository,
     protected blogQueryRepo: BlogQueryRepo,
     private postsQueryRepository: PostsQueryRepository,
     protected blogsRepository: BlogsRepository,
+    //protected updatePostLikeStatusUseCase: UpdatePostLikeStatusUseCase,
     //protected commentRepository:CommentRepository,
   ) {}
   @Put(':postId/likes')
@@ -157,9 +161,8 @@ export class PostsController {
         ),
     );
 
-    const updatedPost = await this.postsService.updatePostLikeStatus(
-      existingPost,
-      latestLikes,
+    const updatedPost = await this.commandBus.execute(
+      new UpdatePostLikeStatusCommand(existingPost, latestLikes),
     );
     if (updatedPost) {
       return { status: 'updated' };
