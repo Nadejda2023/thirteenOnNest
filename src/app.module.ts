@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import dotenv from 'dotenv';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 //import { ConfigModule } from '@nestjs/config';
@@ -45,11 +44,13 @@ import { DeviceRepository } from './modules/device/device.repository';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './configuration/configuration';
 import { UpdatePostLikeStatusUseCase } from './modules/posts/usecase/post_like_status_use_case';
+import { CqrsModule } from '@nestjs/cqrs';
 
-dotenv.config();
+//dotenv.config();
 
 @Module({
   imports: [
+    CqrsModule,
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     MongooseModule.forRoot(process.env.MONGO_URL || ''),
     MongooseModule.forFeature([

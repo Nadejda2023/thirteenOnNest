@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 import {
@@ -8,6 +7,7 @@ import {
   PostsDBModels,
 } from '../../../models/postSchema';
 import { Model } from 'mongoose';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 export class UpdatePostLikeStatusCommand {
   constructor(
@@ -16,30 +16,29 @@ export class UpdatePostLikeStatusCommand {
   ) {}
 }
 
-@Injectable()
-export class UpdatePostLikeStatusUseCase {
+@CommandHandler(UpdatePostLikeStatusCommand)
+export class UpdatePostLikeStatusUseCase
+  implements ICommandHandler<UpdatePostLikeStatusCommand>
+{
   constructor(
     @InjectModel(Posts.name) private postModel: Model<PostDocument>,
     // @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
   ) {}
 
-  async execute(
-    existingPost: PostsDBModels,
-    latestLikes: NewestLikeTypePost[],
-  ) {
-    console.log(JSON.stringify(existingPost));
+  async execute(command: UpdatePostLikeStatusCommand) {
+    console.log(JSON.stringify(command.existingPost));
     try {
       const result = await this.postModel.updateOne(
-        { id: existingPost.id },
+        { id: command.existingPost.id },
         {
           $set: {
             'extendedLikesInfo.likesCount':
-              existingPost.extendedLikesInfo.likesCount,
+              command.existingPost.extendedLikesInfo.likesCount,
             'extendedLikesInfo.dislikesCount':
-              existingPost.extendedLikesInfo.dislikesCount,
+              command.existingPost.extendedLikesInfo.dislikesCount,
             'extendedLikesInfo.statuses':
-              existingPost.extendedLikesInfo.statuses,
-            'extendedLikesInfo.newestLikes': latestLikes,
+              command.existingPost.extendedLikesInfo.statuses,
+            'extendedLikesInfo.newestLikes': command.latestLikes,
           },
         },
       );
