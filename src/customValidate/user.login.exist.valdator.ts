@@ -12,7 +12,6 @@ export class UserLoginExistsValidator implements ValidatorConstraintInterface {
   constructor(private readonly userQueryRepository: UsersQueryRepository) {}
   debugger;
   async validate(login: string) {
-    console.log(login);
     try {
       const user = await this.userQueryRepository.findByLogin(login);
       if (user) {
@@ -21,7 +20,6 @@ export class UserLoginExistsValidator implements ValidatorConstraintInterface {
         return true;
       } // Вернуть true, если пользователь не найден
     } catch (e) {
-      console.log(e);
       return false;
     }
   }

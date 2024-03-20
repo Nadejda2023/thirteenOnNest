@@ -57,18 +57,14 @@ export class AuthRepository {
     return result;
   }
   async confirmUserEmail(code: string) {
-    console.log(code);
     try {
       const user = await this.userRepository.findUserByConfirmationCode(code);
-      //if (!user) throw new BadRequestException('user');
-      console.log('user find by confirmation code', user);
       if (!user) throw new BadRequestException('3');
       if (user.emailConfirmation.isConfirmed) {
         throw new BadRequestException('4');
       }
       await this.userRepository.updateConfirmation(user.id);
     } catch (error) {
-      console.log('error', error);
       return false;
     }
     return true;
@@ -148,14 +144,14 @@ export class AuthRepository {
 
   async refreshTokens(
     userId: string,
-    //deviceId: string,
+    deviceId: string,
   ): Promise<{ accessToken: string; newRefreshToken: string }> {
     try {
       const accessToken = jwt.sign({ userId }, accessTokenSecret1, {
         expiresIn: '10m',
       });
       const newRefreshToken = jwt.sign(
-        { userId }, // deviceId
+        { userId, deviceId }, // deviceId
         refreshTokenSecret2,
         { expiresIn: '20m' },
       );

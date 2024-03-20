@@ -45,8 +45,8 @@ export class CommentRepository {
 
     return response;
   }
-  async findCommentById(commentId: string): Promise<commentViewType> {
-    const comment: commentViewType | null = await this.commentModel.findOne({
+  async findCommentById(commentId: string): Promise<CommentDB | null> {
+    const comment: CommentDB | null = await this.commentModel.findOne({
       id: commentId,
     });
     if (!comment) {
@@ -62,5 +62,50 @@ export class CommentRepository {
     } catch (e) {
       return false;
     }
+  }
+  async updateCommentLikeStatus(
+    existingComment: CommentDB,
+  ): Promise<CommentDB | undefined | boolean> {
+    try {
+      const result = await this.commentModel.updateOne(
+        { id: existingComment.id },
+        {
+          $set: {
+            'likesInfo.likesCount': existingComment.likesInfo.likesCount,
+            'likesInfo.dislikesCount': existingComment.likesInfo.dislikesCount,
+            'likesInfo.statuses': existingComment.likesInfo.statuses,
+          },
+        },
+      );
+
+      if (result === undefined) {
+        return undefined;
+      }
+      return result.modifiedCount === 1;
+    } catch (error) {
+      console.error('Error updating comment:', error);
+
+      return undefined;
+    }
+  }
+  async updateComment(
+    commentId: string,
+    content: string,
+  ): Promise<CommentDB | undefined | boolean> {
+    const foundComment = await this.commentModel.findOne(
+      { id: commentId },
+      { projection: { _id: 0, postId: 0 } },
+    );
+    if (foundComment) {
+      const result = await this.commentModel.updateOne(
+        { id: commentId },
+        { $set: { content: content } },
+      ); //comentatorInfo: comentatorInfo
+      return result.matchedCount === 1;
+    }
+  }
+  async deleteComment(commentId: string) {
+    const result = await this.commentModel.deleteOne({ id: commentId });
+    return result.deletedCount === 1;
   }
 }

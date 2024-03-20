@@ -1,8 +1,8 @@
+import { UserDocument, User, UsersModel } from './../../models/usersSchemas';
 import { Injectable } from '@nestjs/common';
 import { PostsRepository } from './posts.repository';
 import { BlogsRepository } from '../blogs/blogs.repository';
 import {
-  CreateAndUpdatePostDto,
   LikeStatus,
   NewestLikeTypePost,
   PostDocument,
@@ -10,7 +10,6 @@ import {
   Posts,
   PostsDBModels,
 } from '../../models/postSchema';
-import { UsersModel } from '../../models/usersSchemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PostsQueryRepository } from './posts.query-repository';
@@ -20,6 +19,7 @@ import {
   CommentDocument,
   commentViewType,
 } from '../../models/commentSchemas';
+import { CreateAndUpdatePostDto } from '../comment/dto/create.posts.dto';
 
 @Injectable()
 export class PostService {
@@ -29,6 +29,7 @@ export class PostService {
     protected postsRepository: PostsRepository,
     protected blogsRepository: BlogsRepository,
     protected postsQueryRepository: PostsQueryRepository,
+    @InjectModel(User.name) private usersModel: Model<UserDocument>,
   ) {}
 
   async findAllPosts(): Promise<PostViewModel2[]> {
@@ -149,7 +150,6 @@ export class PostService {
           },
         },
       );
-      console.log('result:', result);
       if (result === undefined) {
         return undefined;
       }

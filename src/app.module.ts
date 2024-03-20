@@ -45,6 +45,7 @@ import { ConfigModule } from '@nestjs/config';
 import configuration from './configuration/configuration';
 import { UpdatePostLikeStatusUseCase } from './modules/posts/usecase/post_like_status_use_case';
 import { CqrsModule } from '@nestjs/cqrs';
+import { UserSoftGuard } from './guards/user.middleware';
 
 //dotenv.config();
 
@@ -104,6 +105,7 @@ import { CqrsModule } from '@nestjs/cqrs';
     AuthGuard,
     JwtService,
     AuthorizationGuard,
+    UserSoftGuard,
     UserLoginExistsValidator,
     UserEmailExistsValidator,
     DeviceService,

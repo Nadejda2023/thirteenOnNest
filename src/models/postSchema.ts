@@ -18,13 +18,6 @@ export interface PostViewModel {
   };
 }
 
-export type CreateAndUpdatePostDto = {
-  title: string;
-  shortDescription: string;
-  content: string;
-  blogId: string;
-};
-
 export enum LikeStatus {
   Like = 'Like',
   Dislike = 'Dislike',
@@ -95,12 +88,12 @@ export class Posts {
   @Prop({ required: true })
   createdAt: string;
 
-  // @Prop({
-  //   likesCount: Number,
-  //   dislikesCount: Number,
-  //   statuses: [LikeStatusPostSchema],
-  //   newestLikes: [NewestLikesForPostsSchema],
-  // })
+  @Prop({
+    likesCount: Number,
+    dislikesCount: Number,
+    statuses: [LikeStatusPostSchema],
+    newestLikes: [NewestLikesForPostsSchema],
+  })
   @Prop({ type: ExtendedLikesInfo })
   extendedLikesInfo: ExtendedLikesInfo;
 }
@@ -162,6 +155,21 @@ export class PostsDBModels {
   }
 }
 export type PostViewModel2 = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  blogName: string;
+  createdAt: string;
+  extendedLikesInfo: {
+    likesCount: number;
+    dislikesCount: number;
+    myStatus: string;
+    newestLikes: NewestLikeTypePost[];
+  };
+};
+export type PostViewModel1 = {
   id: string;
   title: string;
   shortDescription: string;

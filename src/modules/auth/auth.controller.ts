@@ -6,6 +6,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Ip,
   Post,
   Req,
   Res,
@@ -28,9 +29,12 @@ import { JwtService } from './application/jwt.service';
 import { EmailService } from '../../adapters/email-adapter';
 import { AuthGuard } from '../../guards/auth.middleware';
 import { UsersValidateDto } from '../../models/input/user.customvalidate.dto';
-import { UsersModel } from '../../models/usersSchemas';
+import { User, UsersModel } from '../../models/usersSchemas';
 import { UsersQueryRepository } from '../users/users.queryRepository';
-import { User } from '../../infastructure/decorators/param/user.decorator';
+import { Device, DeviceDbModel } from '../../models/deviceSchemas';
+import { ObjectId } from 'mongodb';
+import { DeviceRepository } from '../device/device.repository';
+import { UserDecorator } from '../../infastructure/decorators/param/user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -38,10 +42,11 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly emailAdapter: EmailService,
     private readonly authRepository: AuthRepository,
-    // private readonly deviceRepository: DeviceRepository,
+    private readonly deviceRepository: DeviceRepository,
     private readonly userService: UserService,
     private readonly usersQueryRepository: UsersQueryRepository,
     protected authService: AuthService,
+    @InjectModel('Device') private readonly deviceModel: Model<Device>,
     @InjectModel('User') private readonly userModel: Model<UsersModel>,
   ) {}
 
@@ -51,6 +56,7 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
+    @Ip() ip: string,
   ) {
     const user = await this.authRepository.checkCredentials(
       loginDto.loginOrEmail,
@@ -61,17 +67,17 @@ export class AuthController {
       const userId = user.id;
       const accessToken = await this.jwtService.createJWT(user);
       const refreshToken = await this.jwtService.createJWTRT(userId, deviceId);
-      // const lastActiveDate =
-      //   await this.jwtService.getLastActiveDate(refreshToken);
-      // const newDevice: DeviceDbModel = {
-      //   _id: new ObjectId(),
-      //   ip: req.ip,
-      //   title: req.headers['user-agent'] || 'title',
-      //   lastActiveDate,
-      //   deviceId,
-      //   userId,
-      // };
-      //await DeviceModel.insertMany([newDevice]);
+      const lastActiveDate =
+        await this.jwtService.getLastActiveDate(refreshToken);
+      const newDevice: DeviceDbModel = {
+        _id: new ObjectId(),
+        ip: ip,
+        title: req.headers['user-agent'] || 'title',
+        lastActiveDate,
+        deviceId,
+        userId,
+      };
+      await this.deviceModel.insertMany([newDevice]);
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true,
@@ -125,34 +131,36 @@ export class AuthController {
         return res.status(401).json({ message: 'no user' });
       }
 
-      // const device = await DeviceModel.findOne({ deviceId: isValid.deviceId });
-      // if (!device) {
-      //   return res.status(401).json({ message: 'no device' });
-      // }
+      const device = await this.deviceModel.findOne({
+        deviceId: isValid.deviceId,
+      });
+      if (!device) {
+        return res.status(401).json({ message: 'no device' });
+      }
 
-      // const lastActiveDate =
-      //   await this.jwtService.getLastActiveDate(refreshToken);
-      // if (lastActiveDate !== device.lastActiveDate) {
-      //   return res
-      //     .status(401)
-      //     .json({ message: 'Invalid refresh token version' });
-      // }
+      const lastActiveDate =
+        await this.jwtService.getLastActiveDate(refreshToken);
+      if (lastActiveDate !== device.lastActiveDate) {
+        return res
+          .status(401)
+          .json({ message: 'Invalid refresh token version' });
+      }
 
       const newTokens = await this.authRepository.refreshTokens(
         user.id,
-        //device.deviceId,
+        device.deviceId,
       );
-      // const newLastActiveDate = await this.jwtService.getLastActiveDate(
-      //   newTokens.newRefreshToken,
-      // );
-      // await DeviceModel.updateOne(
-      //   { deviceId: device.deviceId },
-      //   { $set: { lastActiveDate: newLastActiveDate } },
-      // ),
-      res.cookie('refreshToken', newTokens.newRefreshToken, {
-        httpOnly: true,
-        secure: true,
-      });
+      const newLastActiveDate = await this.jwtService.getLastActiveDate(
+        newTokens.newRefreshToken,
+      );
+      await this.deviceModel.updateOne(
+        { deviceId: device.deviceId },
+        { $set: { lastActiveDate: newLastActiveDate } },
+      ),
+        res.cookie('refreshToken', newTokens.newRefreshToken, {
+          httpOnly: true,
+          secure: true,
+        });
       res.status(200).json({ accessToken: newTokens.accessToken });
     } catch (error) {
       console.error(error);
@@ -169,7 +177,6 @@ export class AuthController {
       registrationConfirmationDto.code,
     );
 
-    console.log('result', result);
     if (!result) {
       throw new BadRequestException([
         {
@@ -219,18 +226,20 @@ export class AuthController {
       const user = await this.usersQueryRepository.findUserById(isValid.userId);
       if (!user) return res.sendStatus(401);
 
-      // const device = await DeviceModel.findOne({ deviceId: isValid.deviceId });
-      // if (!device) {
-      //   return res.status(401).json({ message: 'Invalid refresh token' });
-      // }
+      const device = await this.deviceModel.findOne({
+        deviceId: isValid.deviceId,
+      });
+      if (!device) {
+        return res.status(401).json({ message: 'Invalid refresh token' });
+      }
 
-      // const lastActiveDate =
-      //   await this.jwtService.getLastActiveDate(refreshToken);
-      // if (lastActiveDate !== device.lastActiveDate) {
-      //   return res.status(401).json({ message: 'Invalid refresh token' });
-      // }
+      const lastActiveDate =
+        await this.jwtService.getLastActiveDate(refreshToken);
+      if (lastActiveDate !== device.lastActiveDate) {
+        return res.status(401).json({ message: 'Invalid refresh token' });
+      }
 
-      //await deviceRepository.deleteDeviceId(isValid.deviceId);
+      await this.deviceRepository.deleteDeviceId(isValid.deviceId);
 
       res.clearCookie('refreshToken', { httpOnly: true, secure: true });
       res.sendStatus(204);
@@ -243,7 +252,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(AuthGuard)
   async createUserMe(
-    @User() user: any,
+    @UserDecorator() user: User,
     @Req() req: Request,
     @Res() res: Response,
   ) {

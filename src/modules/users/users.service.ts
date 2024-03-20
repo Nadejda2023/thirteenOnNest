@@ -2,8 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserRepository } from './users.repository';
 import {
   CreateUserModel,
-  User,
   UserDocument,
+  User,
   UsersModel,
 } from '../../models/usersSchemas';
 import { Model } from 'mongoose';

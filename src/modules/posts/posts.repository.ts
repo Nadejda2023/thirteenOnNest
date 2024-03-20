@@ -32,7 +32,7 @@ export class PostsRepository {
     user: UsersModel | null,
   ): Promise<PostsDBModels | null> {
     const foundPost = await this.postModel
-      .findOne({ id })
+      .findOne({ id: id })
       .select('-__v')
       .lean();
     if (!foundPost) {

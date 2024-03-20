@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '../models/usersSchemas';
+import { UserDocument, User } from '../models/usersSchemas';
 import { JwtService } from '../modules/auth/application/jwt.service';
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const user = await this.usersModel.findOne({ id: userId });
+    const user = await this.usersModel.findOne({ id: userId }, { _id: false });
 
     if (!user) {
       throw new UnauthorizedException('User not found');

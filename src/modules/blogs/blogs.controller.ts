@@ -30,8 +30,9 @@ import {
   getSearchNameTermFromQuery,
 } from '../../hellpers/pagination';
 import { AuthorizationGuard } from '../../guards/auth.basic.guard';
-import { UsersModel } from '../../models/usersSchemas';
-import { User } from '../../infastructure/decorators/param/user.decorator';
+import { User } from '../../models/usersSchemas';
+import { UserDecorator } from '../../infastructure/decorators/param/user.decorator';
+import { UserSoftGuard } from '../../guards/user.middleware';
 
 @Controller('blogs')
 export class BlogsController {
@@ -57,7 +58,7 @@ export class BlogsController {
     );
     return newBlog;
   }
-
+  @UseGuards(UserSoftGuard)
   @Get(':blogId/posts')
   async getPostsByBlogId(
     @Param('blogId') blogId: string,
@@ -80,7 +81,7 @@ export class BlogsController {
   @HttpCode(201)
   async createPostForBlog(
     @Param('blogId') blogId: string,
-    //@User() user: UsersModel,
+    @UserDecorator() user: User,
     @Body() blogPostDto: BlogPostDto,
     @Req() req,
   ) {
@@ -132,7 +133,7 @@ export class BlogsController {
   @HttpCode(204)
   async updateBlog(
     @Param('id') blogId: string,
-    @User() user: UsersModel,
+    @UserDecorator() user: User,
     @Body() updateBlogDto: UpdateBlogDto,
   ) {
     const updatedBlog = await this.blogsService.updateBlog(

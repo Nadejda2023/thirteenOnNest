@@ -12,11 +12,9 @@ import { UsersQueryRepository } from '../modules/users/users.queryRepository';
 export class UserEmailExistsValidator implements ValidatorConstraintInterface {
   constructor(private readonly userQueryRepository: UsersQueryRepository) {}
   async validate(email: string) {
-    console.log(email);
     try {
       const user = await this.userQueryRepository.findUserByEmail(email);
       if (user) {
-        console.log(user);
         throw new BadRequestException([
           {
             message: 'this email found in base',

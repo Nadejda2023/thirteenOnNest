@@ -52,7 +52,6 @@ export class UserRepository {
       const user = await this.userModel.findOne({
         'emailConfirmation.confirmationCode': code,
       });
-      console.log('result user', user);
       return user || null;
     } catch (error) {
       console.error('Error finding user by confirmation code:', error);
@@ -72,7 +71,6 @@ export class UserRepository {
     return smartUserModel;
   }
   async updateConfirmation(userId: string) {
-    console.log('userId', userId);
     return this.userModel.updateOne(
       { id: userId },
       { $set: { 'emailConfirmation.isConfirmed': true } },
