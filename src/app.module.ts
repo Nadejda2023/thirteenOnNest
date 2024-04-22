@@ -46,6 +46,7 @@ import configuration from './configuration/configuration';
 import { UpdatePostLikeStatusUseCase } from './modules/posts/usecase/post_like_status_use_case';
 import { CqrsModule } from '@nestjs/cqrs';
 import { UserSoftGuard } from './guards/user.middleware';
+import { BlogIdExistsValidator } from './customValidate/blog.id.custom.validator';
 
 //dotenv.config();
 
@@ -108,6 +109,7 @@ import { UserSoftGuard } from './guards/user.middleware';
     UserSoftGuard,
     UserLoginExistsValidator,
     UserEmailExistsValidator,
+    BlogIdExistsValidator,
     DeviceService,
     DeviceRepository,
     UpdatePostLikeStatusUseCase,

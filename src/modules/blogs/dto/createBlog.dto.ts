@@ -6,7 +6,7 @@ export class CreateBlogDto {
   @Trim()
   @IsString()
   name: string;
-  @MaxLength(500)
+  @MaxLength(100)
   @Trim()
   @IsString()
   description: string;

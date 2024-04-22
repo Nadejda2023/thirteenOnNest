@@ -20,9 +20,9 @@ export class BlogsRepository {
     return this.blogModel.find(filter, { projection: { _id: 0 } }).lean();
   }
 
-  async findBlogById(id: string): Promise<BlogsViewModel | null> {
+  async findBlogById(blogId: string): Promise<BlogsViewModel | null> {
     const foundBlog = await this.blogModel
-      .findOne({ id })
+      .findOne({ id: blogId })
       .select('-__v')
       .lean();
     if (!foundBlog) {

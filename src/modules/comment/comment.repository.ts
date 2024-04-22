@@ -1,14 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { WithId } from 'mongodb';
 import { InjectModel } from '@nestjs/mongoose';
 import { TPagination } from '../../hellpers/pagination';
-import {
-  CommentDocument,
-  PaginatedCommentViewModel,
-  commentViewType,
-  CommentDB,
-} from '../../models/commentSchemas';
+import { CommentDocument, CommentDB } from '../../models/commentSchemas';
 import { UsersModel } from '../../models/usersSchemas';
 
 @Injectable()
@@ -22,20 +22,23 @@ export class CommentRepository {
     postId: string,
     pagination: TPagination,
     user: UsersModel | null,
-  ): Promise<PaginatedCommentViewModel<commentViewType>> {
+  ) {
     const result: WithId<CommentDB>[] = await this.commentModel
-      .find({ postId }, { _id: 0, postId: 0 }) // filter
+      .find({ postId }) // filter  postId: 0
       .sort({ [pagination.sortBy]: pagination.sortDirection })
       .skip(pagination.skip)
       .limit(pagination.pageSize)
       .lean();
 
+    console.log('totalResult', result);
+
     const totalCount: number = await this.commentModel.countDocuments({
-      postId,
+      postId: postId,
     });
+    console.log('totalCount:', totalCount);
     const pageCount: number = Math.ceil(totalCount / pagination.pageSize);
 
-    const response: PaginatedCommentViewModel<commentViewType> = {
+    const response = {
       pagesCount: pageCount,
       page: pagination.pageNumber,
       pageSize: pagination.pageSize,
@@ -45,15 +48,38 @@ export class CommentRepository {
 
     return response;
   }
-  async findCommentById(commentId: string): Promise<CommentDB | null> {
+
+  async findCommentById(commentId: string): Promise<CommentDB> {
     const comment: CommentDB | null = await this.commentModel.findOne({
       id: commentId,
     });
+
     if (!comment) {
       throw new NotFoundException('Комментарий не найден');
     }
+
     return comment;
   }
+  async findCommentByForPutOrDelete(
+    commentId: string,
+    user,
+  ): Promise<CommentDB> {
+    const comment: CommentDB | null = await this.commentModel.findOne({
+      id: commentId,
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Комментарий не найден');
+    }
+
+    const commentUserId = comment.commentatorInfo.userId;
+    if (commentUserId !== user.id) {
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+    }
+
+    return comment;
+  }
+
   async deleteAll(): Promise<boolean> {
     try {
       const result = await this.commentModel.deleteMany({});
@@ -63,46 +89,54 @@ export class CommentRepository {
       return false;
     }
   }
+
   async updateCommentLikeStatus(
     existingComment: CommentDB,
   ): Promise<CommentDB | undefined | boolean> {
-    try {
-      const result = await this.commentModel.updateOne(
-        { id: existingComment.id },
-        {
-          $set: {
-            'likesInfo.likesCount': existingComment.likesInfo.likesCount,
-            'likesInfo.dislikesCount': existingComment.likesInfo.dislikesCount,
-            'likesInfo.statuses': existingComment.likesInfo.statuses,
-          },
+    const result = await this.commentModel.updateOne(
+      { id: existingComment.id },
+      {
+        $set: {
+          'likesInfo.likesCount': existingComment.likesInfo.likesCount,
+          'likesInfo.dislikesCount': existingComment.likesInfo.dislikesCount,
+          'likesInfo.statuses': existingComment.likesInfo.statuses,
         },
-      );
+      },
+    );
 
-      if (result === undefined) {
-        return undefined;
-      }
-      return result.modifiedCount === 1;
-    } catch (error) {
-      console.error('Error updating comment:', error);
+    console.log('result updateComment:', result);
 
-      return undefined;
+    if (!result) {
+      throw new NotFoundException(`Post with ID not found`);
     }
+
+    return result ? true : false;
   }
+
   async updateComment(
     commentId: string,
     content: string,
-  ): Promise<CommentDB | undefined | boolean> {
+  ): Promise<boolean | undefined> {
     const foundComment = await this.commentModel.findOne(
       { id: commentId },
       { projection: { _id: 0, postId: 0 } },
     );
-    if (foundComment) {
-      const result = await this.commentModel.updateOne(
-        { id: commentId },
-        { $set: { content: content } },
-      ); //comentatorInfo: comentatorInfo
-      return result.matchedCount === 1;
+    if (!foundComment) {
+      throw new NotFoundException();
     }
+    console.log(foundComment);
+
+    const result = await this.commentModel.updateOne(
+      { id: commentId },
+      { $set: { content: content } },
+      { new: true },
+    );
+    console.log(result);
+
+    if (!result) {
+      throw new NotFoundException(`Post with ID not found`);
+    }
+    return true;
   }
   async deleteComment(commentId: string) {
     const result = await this.commentModel.deleteOne({ id: commentId });

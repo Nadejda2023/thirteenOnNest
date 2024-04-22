@@ -25,9 +25,10 @@ export class CommentService {
   async updateComment(
     commentId: string,
     content: string,
-  ): Promise<CommentDB | undefined | boolean> {
+  ): Promise<boolean | undefined> {
     return await this.commentRepository.updateComment(commentId, content);
   }
+
   async deleteComment(commentId: string) {
     const result = await this.commentRepository.deleteComment(commentId);
     if (result) {

@@ -1,7 +1,9 @@
 import { IsString, Length } from 'class-validator';
+import { Trim } from '../../../infastructure/decorators/transform/trim';
 
-export class CreateCommentDto {
+export class CreateAndUpdateCommentDto {
   @IsString()
-  @Length(1, 300)
+  @Trim()
+  @Length(20, 300)
   content: string;
 }

@@ -4,12 +4,9 @@ import {
   Delete,
   Get,
   HttpCode,
-  NotFoundException,
   Param,
-  ParseUUIDPipe,
   Put,
   Req,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
@@ -19,6 +16,9 @@ import { UserSoftGuard } from '../../guards/user.middleware';
 import { AuthGuard } from '../../guards/auth.middleware';
 import { LikeStatusDto } from './dto/postslike_status_reaction_status.dto';
 import { LikeStatus, LikeStatusType } from '../../models/postSchema';
+import { CreateAndUpdateCommentDto } from './dto/create.comment.dto';
+import { UserDecorator } from '../../infastructure/decorators/param/user.decorator';
+import { User } from '../../models/usersSchemas';
 
 @Controller('comments')
 export class CommentController {
@@ -26,40 +26,30 @@ export class CommentController {
     protected commentService: CommentService,
     protected commentRepository: CommentRepository,
   ) {}
-  @UseGuards(UserSoftGuard)
-  @Get(':commentId')
-  async getCommentById(
-    @Param('commentId', new ParseUUIDPipe()) commentId: string,
-    @Req() req,
-    @Res() res,
-  ) {
-    //const user = req.user;
-    const foundComment: CommentDB | null =
-      await this.commentRepository.findCommentById(commentId);
 
-    if (foundComment) {
-      return res.status(200).json(foundComment);
-    } else {
-      return res.status(404).send('Comment not found');
-    }
+  @UseGuards(UserSoftGuard)
+  @Get('/:id')
+  @HttpCode(200)
+  async getCommentById(@Param('id') commentId: string, @Req() req) {
+    const user = req.user;
+    const foundComment: CommentDB =
+      await this.commentRepository.findCommentById(commentId);
+    const viewModel = CommentDB.getViewModel(user, foundComment);
+    return viewModel;
   }
+
   @UseGuards(AuthGuard)
   @Put(':commentId/like-status')
   @HttpCode(204)
   async commentUpdateLikeStatus(
-    @Param('commentId', new ParseUUIDPipe()) commentId: string,
+    @Param('commentId') commentId: string,
     @Body() likeStatusDto: LikeStatusDto,
     @Req() req,
+    @UserDecorator() user: User,
   ) {
-    const user = req.user;
-
-    //const existingComment = null
     const existingComment =
       await this.commentRepository.findCommentById(commentId);
-
-    if (!existingComment) {
-      throw new NotFoundException();
-    }
+    console.log('existingComment:', existingComment);
 
     const isReactionExist = existingComment.likesInfo.statuses.find(
       (s: LikeStatusType) => s.userId === user!.id,
@@ -131,45 +121,51 @@ export class CommentController {
 
     await this.commentService.updateCommentLikeStatus(existingComment);
   }
+
   @UseGuards(AuthGuard)
-  @Put(':commentId')
+  @Put('/:commentId')
   @HttpCode(204)
   async updateCommentById(
-    @Param('commentId', new ParseUUIDPipe()) commentId: string,
+    @Param('commentId') commentId: string,
+    @Body() updateCommentDto: CreateAndUpdateCommentDto,
     @Req() req,
-    @Res() res,
+    //@UserDecorator() user: User,
   ) {
     const user = req.user!;
 
+    console.log('1', commentId);
     const existingComment =
-      await this.commentRepository.findCommentById(commentId);
-    if (!existingComment) {
-      throw new NotFoundException('Комментарий не найден');
-    }
-
-    if (existingComment.commentatorInfo.userId !== user.id) {
-      return res.sendStatus(403);
-    }
-
-    return await this.commentService.updateComment(commentId, req.body.content);
+      await this.commentRepository.findCommentByForPutOrDelete(commentId, user);
+    console.log('existingComment:', existingComment);
+    console.log(updateCommentDto.content);
+    return await this.commentService.updateComment(
+      commentId,
+      updateCommentDto.content,
+    );
   }
+
   @UseGuards(AuthGuard)
-  @Delete(':commentId')
+  @Delete('/:commentId')
   @HttpCode(204)
   async deleteCommentById(
-    @Param('commentId', new ParseUUIDPipe()) commentId: string,
+    @Param('commentId') commentId: string,
     @Req() req,
-    @Res() res,
+    // @Res() res,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const user = req.user!;
-    const comment = await this.commentRepository.findCommentById(commentId);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const comment = await this.commentRepository.findCommentByForPutOrDelete(
+      commentId,
+      user,
+    );
 
-    if (comment) {
-      const commentUserId = comment.commentatorInfo.userId;
-      if (commentUserId !== user.id) {
-        return res.sendStatus(403);
-      }
-      await this.commentService.deleteComment(req.params.commentId);
-    }
+    // if (comment) {
+    //   const commentUserId = comment.commentatorInfo.userId;
+    //   if (commentUserId !== user.id) {
+    //     return res.sendStatus(403);
+    //   }
+    await this.commentService.deleteComment(req.params.commentId);
   }
 }
+//}

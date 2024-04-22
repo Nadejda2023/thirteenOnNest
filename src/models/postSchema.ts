@@ -101,9 +101,9 @@ export class Posts {
 export const PostSchema = SchemaFactory.createForClass(Posts);
 
 export type NewestLikeTypePost = {
-  addedAt: string;
-  userId: string;
-  login: string;
+  addedAt?: string;
+  userId?: string;
+  login?: string;
 };
 
 export class PostsDBModels {
@@ -118,7 +118,7 @@ export class PostsDBModels {
     public extendedLikesInfo: {
       likesCount: number;
       dislikesCount: number;
-      //myStatus: string; // в бд не надо его
+      myStatus: string;
       statuses: LikeStatusTypePost[];
       newestLikes: NewestLikeTypePost[];
     },
@@ -169,24 +169,11 @@ export type PostViewModel2 = {
     newestLikes: NewestLikeTypePost[];
   };
 };
-export type PostViewModel1 = {
-  id: string;
-  title: string;
-  shortDescription: string;
-  content: string;
-  blogId: string;
-  blogName: string;
-  createdAt: string;
-  extendedLikesInfo: {
-    likesCount: number;
-    dislikesCount: number;
-    myStatus: string;
-    newestLikes: NewestLikeTypePost[];
-  };
-};
+
 export type WithId<T> = {
   id: string;
 } & T;
+
 export type PaginatedPost<T> = {
   pagesCount: number;
   page: number;

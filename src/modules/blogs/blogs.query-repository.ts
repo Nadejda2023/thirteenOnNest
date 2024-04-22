@@ -150,6 +150,7 @@ export class BlogQueryRepo {
       .sort({ [pagination.sortBy]: pagination.sortDirection })
       .skip(pagination.skip)
       .limit(pagination.pageSize)
+      .select('-newestLikes._id -__v')
       .lean();
 
     // const resultWithIds = result.map((item) => {

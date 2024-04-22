@@ -3,7 +3,7 @@ import { DeviceService } from './device.service';
 import { DeviceRepository } from './device.repository';
 import { AuthRepository } from '../auth/auth.repository';
 
-@Controller('device')
+@Controller('/security/devices')
 export class DeviceController {
   constructor(
     private readonly deviceService: DeviceService,

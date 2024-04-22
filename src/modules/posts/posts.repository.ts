@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   PostDocument,
@@ -29,14 +29,22 @@ export class PostsRepository {
   }
   async findPostById(
     id: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     user: UsersModel | null,
   ): Promise<PostsDBModels | null> {
     const foundPost = await this.postModel
-      .findOne({ id: id })
-      .select('-__v')
+      .findOne(
+        { id: id },
+        {
+          projection: {
+            'extendedLikesInfo.statuses': 0,
+          },
+        },
+      )
+      .select('-extendedLikesInfo._id -__v')
       .lean();
     if (!foundPost) {
-      return null;
+      throw new NotFoundException();
     }
     return {
       id: foundPost.id,
@@ -48,27 +56,16 @@ export class PostsRepository {
       createdAt: foundPost.createdAt,
       extendedLikesInfo: {
         ...foundPost.extendedLikesInfo,
-        newestLikes: user
-          ? [
-              {
-                addedAt:
-                  foundPost.extendedLikesInfo.newestLikes[0]?.addedAt || '',
-                userId:
-                  foundPost.extendedLikesInfo.newestLikes[0]?.userId || '',
-                login: foundPost.extendedLikesInfo.newestLikes[0]?.login || '',
-              },
-            ]
-          : [],
       },
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createPost(newPost: PostViewModel2, user: UsersModel | null) {
     try {
       await this.postModel.create(newPost);
-      //return result;
 
-      return {
+      const createdPost = {
         id: newPost.id,
         title: newPost.title,
         shortDescription: newPost.shortDescription,
@@ -80,19 +77,10 @@ export class PostsRepository {
           likesCount: newPost.extendedLikesInfo.likesCount,
           dislikesCount: newPost.extendedLikesInfo.dislikesCount,
           myStatus: newPost.extendedLikesInfo.myStatus,
-          newestLikes: user
-            ? [
-                {
-                  addedAt:
-                    newPost.extendedLikesInfo.newestLikes[0]?.addedAt || '',
-                  userId:
-                    newPost.extendedLikesInfo.newestLikes[0]?.userId || '',
-                  login: newPost.extendedLikesInfo.newestLikes[0]?.login || '',
-                },
-              ]
-            : [],
+          newestLikes: [],
         },
       };
+      return createdPost;
     } catch (error) {
       console.error('Error creating post:', error);
       return null;

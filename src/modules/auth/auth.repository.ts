@@ -148,12 +148,12 @@ export class AuthRepository {
   ): Promise<{ accessToken: string; newRefreshToken: string }> {
     try {
       const accessToken = jwt.sign({ userId }, accessTokenSecret1, {
-        expiresIn: '10m',
+        expiresIn: '10s',
       });
       const newRefreshToken = jwt.sign(
         { userId, deviceId }, // deviceId
         refreshTokenSecret2,
-        { expiresIn: '20m' },
+        { expiresIn: '20s' },
       );
       return { accessToken, newRefreshToken };
     } catch (error) {

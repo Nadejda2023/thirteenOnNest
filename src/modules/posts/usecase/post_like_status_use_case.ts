@@ -36,23 +36,22 @@ export class UpdatePostLikeStatusUseCase
               command.existingPost.extendedLikesInfo.likesCount,
             'extendedLikesInfo.dislikesCount':
               command.existingPost.extendedLikesInfo.dislikesCount,
-            // 'extendedLikesInfo.myStatus':
-            //   command.existingPost.extendedLikesInfo.myStatus,
+            'extendedLikesInfo.myStatus':
+              command.existingPost.extendedLikesInfo.myStatus,
             'extendedLikesInfo.statuses':
               command.existingPost.extendedLikesInfo.statuses,
             'extendedLikesInfo.newestLikes': command.latestLikes,
           },
         },
       );
-      console.log('Результат обновления:', result);
 
-      if (result.modifiedCount === 1) {
-        console.log('Статус успешно обновлен');
+      if (result && result.modifiedCount && result.modifiedCount === 1) {
         return true;
+      } else {
+        return false;
       }
     } catch (error) {
       console.error('Error updating post:', error);
-
       return undefined;
     }
   }

@@ -19,14 +19,14 @@ export class JwtService {
 
   async createJWT(user: UsersModel): Promise<string> {
     const token = jwt.sign({ userId: user.id }, accessTokenSecret1, {
-      expiresIn: '600000s',
+      expiresIn: '10s',
     });
     return token;
   }
 
   async createJWTRT(userId: string, deviceId: string): Promise<string> {
     const rtoken = jwt.sign({ userId, deviceId }, refreshTokenSecret2, {
-      expiresIn: '200000s',
+      expiresIn: '20s',
     });
     return rtoken;
   }

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -41,15 +40,17 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { AuthorizationGuard } from '../../guards/auth.basic.guard';
 import { UserDecorator } from '../../infastructure/decorators/param/user.decorator';
-import { CreateAndUpdatePostDto } from '../comment/dto/create.posts.dto';
+import { CreateAndUpdatePostDto } from './dto/create.posts.dto';
 import { UserSoftGuard } from '../../guards/user.middleware';
-import { CreateCommentDto } from '../comment/dto/create.comment.dto';
+import { BlogDocument, Blogs } from '../../models/blogSchems';
+import { CreateAndUpdateCommentDto } from '../comment/dto/create.comment.dto';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     //@InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel('User') private readonly userModel: Model<UsersModel>,
+    @InjectModel(Blogs.name) private blogModel: Model<BlogDocument>,
     private commandBus: CommandBus,
     protected postsService: PostService,
     private postsRepository: PostsRepository,
@@ -168,8 +169,8 @@ export class PostsController {
             );
             return {
               addedAt: latestLikes.createdAt,
-              userId: latestLikes.userId,
               login: user?.login || 'Unknown',
+              userId: latestLikes.userId,
             };
           },
         ),
@@ -178,10 +179,7 @@ export class PostsController {
     const updatedPost = await this.commandBus.execute(
       new UpdatePostLikeStatusCommand(existingPost, latestLikes),
     );
-    console.log('updatedPost:', updatedPost);
     if (!updatedPost) {
-      //   return { status: 'updated' };
-      // } else {
       throw new HttpException(
         'Unable to update post',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -191,34 +189,22 @@ export class PostsController {
 
   @Post(':postId/comments')
   @UseGuards(AuthGuard)
+  @HttpCode(201)
   async createCommentsPost(
     @Param('postId') postId: string,
-    @Body() content: CreateCommentDto,
+    @Body() commentDto: CreateAndUpdateCommentDto,
     @Req() req,
-    @Res() res,
     @UserDecorator() user: User,
   ) {
-    try {
-      const postWithId = await this.postsRepository.findPostById(postId, user);
-
-      if (!postWithId) {
-        return res.sendStatus(HttpStatus.NOT_FOUND);
-      }
-
-      const comment = await this.postsService.createPostComment(
-        postWithId.id,
-        req.body.content,
-        { userId: req.user.id, userLogin: req.user.login },
-      );
-
-      if (!comment) {
-        return res.sendStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-
-      return res.status(HttpStatus.CREATED).json(comment);
-    } catch (error) {
-      return res.sendStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    return await this.postsService.createPostComment(
+      postId,
+      commentDto.content,
+      {
+        userId: user.id,
+        userLogin: user.login,
+      },
+      user,
+    );
   }
 
   @Get()
@@ -245,23 +231,19 @@ export class PostsController {
     }
   }
 
-  @Get(':id')
+  @Get('/:id')
   @UseGuards(UserSoftGuard)
   async getPostById(
     @Param('id') id: string,
     @Req() req,
-    @Res() res,
-    @UserDecorator() user: User,
+    //@UserDecorator() user: User,
   ) {
-    const foundPost: PostsDBModels | null =
-      await this.postsService.findPostById(id, user);
-
-    if (foundPost !== null) {
-      return res.status(200).json(PostsDBModels.getViewModel(user, foundPost));
-    } else {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+    const post = await this.postsService.findPostById(id, req.user);
+    const viewModel = PostsDBModels.getViewModel(req.user, post);
+    console.log(JSON.stringify(viewModel));
+    return viewModel;
   }
+
   @Post()
   @UseGuards(AuthorizationGuard)
   @HttpCode(201)
@@ -270,60 +252,50 @@ export class PostsController {
     @Req() req,
     @UserDecorator() user: User,
   ): Promise<PostViewModel2 | null> {
-    const blogId = createPostDto.blogId;
-    await this.blogsRepository.findBlogById(blogId);
-
-    // if (!findBlogforPosts) {
-    //   throw new HttpException(
-    //     'Unable to create a new post',
-    //     HttpStatus.NOT_FOUND,
-    //   );
-    // }
-
-    const newPost = await this.postsService.createPost(createPostDto, user);
-
-    if (!newPost) {
-      throw new BadRequestException([
-        {
-          message: 'failed to create posts',
-          field: 'create posts',
-        },
-      ]);
-    }
-
-    return newPost;
+    // ну что за жесть Надя????? ну отрефактори уже весь код!!!!! сама себя прошу
+    return await this.postsService.createPost(createPostDto, user);
   }
+
   @Put(':id')
   @UseGuards(AuthorizationGuard)
+  @HttpCode(204)
   async updatePost(
     @Param('id') id: string,
     @Body() updateData: CreateAndUpdatePostDto,
-    @Res() res,
   ) {
-    //const { title, shortDescription, content, blogId } = updateData;
-    const updatePost = await this.postsService.updatePost(
+    return await this.postsService.updatePost(
       id,
       updateData.title,
       updateData.shortDescription,
       updateData.content,
       updateData.blogId,
     );
-
-    if (!updatePost) {
-      throw new NotFoundException(`Blog with ID ${id} not found`);
+  }
+  @Get(':postId/comments')
+  @UseGuards(UserSoftGuard)
+  @HttpCode(200)
+  async getCommentFromPost(
+    @Query() query: any,
+    @Param('postId') postId: string,
+    @Req() req,
+  ) {
+    const user = req.user!;
+    const post = await this.postsService.findPostById(req.params.postId, user);
+    if (!post) {
+      throw new NotFoundException();
     }
-    res.sendStatus(HttpStatus.NO_CONTENT);
+    const pagination = getPaginationFromQuery(req.query);
+    return await this.commentRepository.getAllCommentsForPost(
+      postId,
+      pagination,
+      user,
+    );
   }
 
   @Delete(':id')
+  @HttpCode(204)
   @UseGuards(AuthorizationGuard)
-  async deletePostById(@Param('id') id: string, @Req() req, @Res() res) {
-    const foundPost = await this.postsService.deletePost(id);
-
-    if (!foundPost) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
-    }
-
-    res.sendStatus(204);
+  async deletePostById(@Param('id') id: string) {
+    return await this.postsService.deletePost(id);
   }
 }

@@ -49,8 +49,8 @@ export class AuthController {
     @InjectModel('Device') private readonly deviceModel: Model<Device>,
     @InjectModel('User') private readonly userModel: Model<UsersModel>,
   ) {}
-
-  @Post('login')
+  @Throttle({})
+  @Post('/login')
   @HttpCode(200)
   async createAuthUser(
     @Body() loginDto: LoginDto,
@@ -93,6 +93,7 @@ export class AuthController {
       ]);
     }
   }
+
   @Throttle({})
   @Post('password-recovery')
   @HttpCode(204)
