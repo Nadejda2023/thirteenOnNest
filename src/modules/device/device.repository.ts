@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DeviceDbModel, DeviceModel } from '../../models/deviceSchemas';
@@ -45,28 +45,20 @@ export class DeviceRepository {
     }
   }
   async getAllDeviceByUserId(userId: string): Promise<DeviceDbModel[]> {
-    try {
-      const device = await this.deviceModel
-        .find({ userId }, { projection: { _id: 0, userId: 0 } })
-        .lean();
-      return device;
-    } catch (error) {
-      console.error('Error getting device by user ID:', error);
-      return [];
+    const device: DeviceDbModel[] = await this.deviceModel
+      .find({ userId }, { projection: { _id: 0, userId: 0 } })
+      .lean();
+    if (!device) {
+      throw new NotFoundException();
     }
+    return device;
   }
   async deleteDeviceId(deviceId: string): Promise<boolean> {
-    try {
-      const result = await this.deviceModel.deleteOne({ deviceId });
+    const result = await this.deviceModel.deleteOne({ deviceId });
 
-      if (result.deletedCount === 1) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (error) {
-      console.error('Error deleting device by ID:', error);
-      return false;
+    if (!result) {
+      throw new NotFoundException(`with ID ${deviceId} not found`);
     }
+    return result.deletedCount === 1;
   }
 }

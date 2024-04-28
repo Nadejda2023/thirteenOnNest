@@ -1,4 +1,3 @@
-import { UserService } from '../users/users.service';
 import { Request, Response } from 'express';
 import {
   BadRequestException,
@@ -17,39 +16,36 @@ import { AuthRepository } from './auth.repository';
 import { randomUUID } from 'crypto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
 import { RegistrationEmailResendingDto } from './dto/registration-email-resending.dto';
 import { LoginDto } from './dto/login.dto';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { RecoveryPasswordDto } from './dto/recovery-password.dto';
-import { AuthService } from './auth.service';
 import { NewPasswordDto } from './dto/new-password.dto';
 import { RegistrationConfirmationDto } from './dto/registration-confirmation.dto';
 import { JwtService } from './application/jwt.service';
-import { EmailService } from '../../adapters/email-adapter';
 import { AuthGuard } from '../../guards/auth.middleware';
 import { UsersValidateDto } from '../../models/input/user.customvalidate.dto';
-import { User, UsersModel } from '../../models/usersSchemas';
+import { User } from '../../models/usersSchemas';
 import { UsersQueryRepository } from '../users/users.queryRepository';
 import { Device, DeviceDbModel } from '../../models/deviceSchemas';
-import { ObjectId } from 'mongodb';
 import { DeviceRepository } from '../device/device.repository';
 import { UserDecorator } from '../../infastructure/decorators/param/user.decorator';
+import { AuthService } from './auth.service';
+import { RefreshToken } from './decorators/refresh-token.decoratoes';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly emailAdapter: EmailService,
+    private readonly authService: AuthService,
     private readonly authRepository: AuthRepository,
     private readonly deviceRepository: DeviceRepository,
-    private readonly userService: UserService,
     private readonly usersQueryRepository: UsersQueryRepository,
-    protected authService: AuthService,
     @InjectModel('Device') private readonly deviceModel: Model<Device>,
-    @InjectModel('User') private readonly userModel: Model<UsersModel>,
   ) {}
-  @Throttle({})
+
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('/login')
   @HttpCode(200)
   async createAuthUser(
@@ -70,7 +66,6 @@ export class AuthController {
       const lastActiveDate =
         await this.jwtService.getLastActiveDate(refreshToken);
       const newDevice: DeviceDbModel = {
-        _id: new ObjectId(),
         ip: ip,
         title: req.headers['user-agent'] || 'title',
         lastActiveDate,
@@ -94,57 +89,54 @@ export class AuthController {
     }
   }
 
-  @Throttle({})
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('password-recovery')
   @HttpCode(204)
   async passwordRecovery(@Body() recoveryPasswordDto: RecoveryPasswordDto) {
     return this.authService.passwordRecovery(recoveryPasswordDto.email);
   }
 
-  @Throttle({})
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('new-password')
   @HttpCode(204)
   async newPassword(@Body() newPasswordDto: NewPasswordDto) {
     return this.authService.newPassword(newPasswordDto);
   }
-  //
+
   @Post('refresh-token')
+  @HttpCode(200)
   async createRefreshToken(
+    @RefreshToken() token: string,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    if (!token) throw new UnauthorizedException();
     try {
-      const refreshToken = req.cookies.refreshToken;
-      if (!refreshToken) {
-        return res.status(401).json({ message: 'no rt in cookie' });
-      }
+      //const refreshToken = req.cookies.refreshToken;
+      console.log('refresh token from req:', token);
+      // if (!token) {
+      //   throw new UnauthorizedException();
+      // }
 
-      const isValid =
-        await this.authRepository.validateRefreshToken(refreshToken);
-      if (!isValid) {
-        return res
-          .status(401)
-          .json({ message: 'rt secretinvalid or rt expired' });
-      }
+      const isValid = await this.authRepository.validateRefreshToken(token);
 
       const user = await this.usersQueryRepository.findUserById(isValid.userId);
       if (!user) {
-        return res.status(401).json({ message: 'no user' });
+        throw new UnauthorizedException();
       }
 
       const device = await this.deviceModel.findOne({
         deviceId: isValid.deviceId,
       });
       if (!device) {
-        return res.status(401).json({ message: 'no device' });
+        throw new UnauthorizedException();
       }
 
-      const lastActiveDate =
-        await this.jwtService.getLastActiveDate(refreshToken);
+      const lastActiveDate = await this.jwtService.getLastActiveDate(token);
       if (lastActiveDate !== device.lastActiveDate) {
-        return res
-          .status(401)
-          .json({ message: 'Invalid refresh token version' });
+        throw new UnauthorizedException();
       }
 
       const newTokens = await this.authRepository.refreshTokens(
@@ -162,13 +154,13 @@ export class AuthController {
           httpOnly: true,
           secure: true,
         });
-      res.status(200).json({ accessToken: newTokens.accessToken });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: '' });
+      return { accessToken: newTokens.accessToken };
+    } catch (e) {
+      throw new UnauthorizedException();
     }
   }
-  @Throttle({})
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('registration-confirmation')
   @HttpCode(204)
   async createRegistrationConfirmation(
@@ -189,8 +181,10 @@ export class AuthController {
       //   return;
     }
   }
+
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('registration')
-  @Throttle({})
   @HttpCode(204)
   async createRegistration(@Body() createUserDto: UsersValidateDto) {
     // to do UserDto
@@ -200,8 +194,10 @@ export class AuthController {
       createUserDto.password,
     );
   }
+
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('registration-email-resending')
-  @Throttle({})
   @HttpCode(204)
   async createRegistrationEmailResending(
     @Body() registrationEmailResendingDto: RegistrationEmailResendingDto,
@@ -212,41 +208,40 @@ export class AuthController {
   }
 
   @Post('logout')
-  async createUserLogout(@Req() req: Request, @Res() res: Response) {
+  @HttpCode(204)
+  async createUserLogout(
+    @RefreshToken() token: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     try {
-      const refreshToken = req.cookies.refreshToken;
-      if (!refreshToken) {
-        return res.status(401).json({ message: 'Refresh token not found' });
+      //const refreshToken = req.cookies.refreshToken;
+      if (!token) {
+        throw new UnauthorizedException();
       }
-      const isValid =
-        await this.authRepository.validateRefreshToken(refreshToken);
-      if (!isValid) {
-        return res.status(401).json({ message: 'Invalid refresh token' });
-      }
+      const isValid = await this.authRepository.validateRefreshToken(token);
 
       const user = await this.usersQueryRepository.findUserById(isValid.userId);
-      if (!user) return res.sendStatus(401);
+      if (!user) throw new UnauthorizedException();
 
       const device = await this.deviceModel.findOne({
         deviceId: isValid.deviceId,
       });
       if (!device) {
-        return res.status(401).json({ message: 'Invalid refresh token' });
+        throw new UnauthorizedException();
       }
 
-      const lastActiveDate =
-        await this.jwtService.getLastActiveDate(refreshToken);
+      const lastActiveDate = await this.jwtService.getLastActiveDate(token);
       if (lastActiveDate !== device.lastActiveDate) {
-        return res.status(401).json({ message: 'Invalid refresh token' });
+        throw new UnauthorizedException();
       }
 
       await this.deviceRepository.deleteDeviceId(isValid.deviceId);
 
       res.clearCookie('refreshToken', { httpOnly: true, secure: true });
-      res.sendStatus(204);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Server error' });
+      throw error;
     }
   }
 
@@ -258,8 +253,12 @@ export class AuthController {
     @Res() res: Response,
   ) {
     if (!user) {
-      //это ошибка уйдет когда добавлю мидлл вари
-      return res.sendStatus(401);
+      throw new UnauthorizedException([
+        {
+          message: '401',
+          field: 'not',
+        },
+      ]);
     } else {
       return res.status(200).send({
         email: user.email,

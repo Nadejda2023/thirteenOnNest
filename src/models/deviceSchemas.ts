@@ -1,9 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ObjectId } from 'mongodb';
 import { HydratedDocument } from 'mongoose';
+import { UsersModel } from './usersSchemas';
 
 export type DeviceDbModel = {
-  _id: ObjectId;
   ip: string;
   title: string;
   lastActiveDate: string;
@@ -14,13 +13,23 @@ export class DeviceModel {
   ///тот самый тип который был с длинным названием
 
   constructor(
-    public _id: ObjectId,
     public ip: string,
     public title: string,
     public lastActiveDate: string,
     public deviceId: string,
     public userId: string,
   ) {}
+  static getViewModel(
+    user: UsersModel | null,
+    device: DeviceDbModel,
+  ): DeviceViewModel {
+    return {
+      ip: device.ip,
+      title: device.title,
+      lastActiveDate: device.lastActiveDate,
+      deviceId: device.deviceId,
+    };
+  }
 }
 export type DeviceViewModel = {
   ip: string;

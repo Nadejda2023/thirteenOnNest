@@ -44,7 +44,6 @@ export class CommentController {
   async commentUpdateLikeStatus(
     @Param('commentId') commentId: string,
     @Body() likeStatusDto: LikeStatusDto,
-    @Req() req,
     @UserDecorator() user: User,
   ) {
     const existingComment =

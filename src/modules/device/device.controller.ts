@@ -1,7 +1,17 @@
-import { Controller, Get, Delete, Res, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Delete,
+  UnauthorizedException,
+  HttpCode,
+  Param,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { DeviceRepository } from './device.repository';
 import { AuthRepository } from '../auth/auth.repository';
+import { RefreshToken } from '../auth/decorators/refresh-token.decoratoes';
 
 @Controller('/security/devices')
 export class DeviceController {
@@ -11,87 +21,88 @@ export class DeviceController {
     protected authRepository: AuthRepository,
   ) {}
   @Get('')
-  async getDeviceByUserId(@Req() req, @Res() res) {
-    const refreshToken = req.cookies.refreshToken;
+  async getDeviceByUserId(@RefreshToken() token: string) {
+    if (!token) throw new UnauthorizedException();
+    try {
+      console.log('refresh token from  req DEVICE:', token);
+      const isValid = await this.authRepository.validateRefreshToken(token);
 
-    if (!refreshToken) {
-      return res.status(401).json({ message: 'Refresh token not found' });
-    }
-    const isValid =
-      await this.authRepository.validateRefreshToken(refreshToken);
+      if (!isValid || !isValid.userId || !isValid.deviceId) {
+        throw new UnauthorizedException();
+      }
+      const user = await this.authRepository.findUserByID(isValid.userId);
 
-    if (!isValid || !isValid.userId || !isValid.deviceId) {
-      return res.status(401).json({ message: 'Invalid refresh token' });
-    }
-    const user = await this.authRepository.findUserByID(isValid.userId);
+      if (!user) {
+        throw new UnauthorizedException();
+      }
 
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
-    }
+      const device = await this.deviceRepository.findDeviceById(
+        isValid.deviceId,
+      );
+      if (!device) {
+        throw new UnauthorizedException();
+      }
 
-    const device = await this.deviceRepository.findDeviceById(isValid.deviceId);
-    if (!device) {
-      return res.status(401).json({ message: 'Device not found' });
-    }
+      if (isValid.userId !== device.userId) {
+        throw new UnauthorizedException();
+      }
 
-    if (isValid.userId !== device.userId) {
-      return res.status(401).json({ message: 'Unauthorized access to device' });
-    }
+      const foundDevices = await this.deviceRepository.getAllDeviceByUserId(
+        isValid.userId,
+      );
+      if (!foundDevices) {
+        throw new NotFoundException();
+      }
+      const devices = foundDevices.map((device) => ({
+        ip: device.ip,
+        title: device.title,
+        lastActiveDate: device.lastActiveDate,
+        deviceId: device.deviceId,
+      }));
 
-    const result = await this.deviceRepository.getAllDeviceByUserId(
-      isValid.userId,
-    );
-
-    if (result) {
-      res.status(200).send(result);
-    } else {
-      res.sendStatus(401);
+      return devices;
+    } catch {
+      throw new UnauthorizedException();
     }
   }
   @Delete('')
-  async deleteAllDeviceExceptOneDevice(@Req() req, @Res() res) {
-    const refreshToken = req.cookies.refreshToken;
-    const isValid =
-      await this.authRepository.validateRefreshToken(refreshToken);
-    if (!isValid || !isValid.userId || !isValid.deviceId) {
-      return res.status(401).json({ message: 'Unauthorized ' });
-    }
+  @HttpCode(204)
+  async deleteAllDeviceExceptOneDevice(@RefreshToken() token: string) {
+    const isValid = await this.authRepository.validateRefreshToken(token);
+    // if (!isValid || !isValid.userId || !isValid.deviceId) {
+    //   throw new UnauthorizedException();
+    // }
 
-    const result = await this.deviceRepository.deleteAllExceptOne(
+    return await this.deviceRepository.deleteAllExceptOne(
       isValid.userId,
       isValid.deviceId,
     ); // delete({userId, $..: deviceId})
-    if (result) {
-      res.sendStatus(204);
-    } else {
-      res.sendStatus(500);
-    }
   }
-  @Delete(':id')
-  async deleteDeviceById(@Req() req, @Res() res) {
-    const refreshToken = req.cookies.refreshToken;
-    const deviceId = req.params.deviceId;
-    const isValid =
-      await this.authRepository.validateRefreshToken(refreshToken);
+  @Delete(':deviceId')
+  @HttpCode(204)
+  async deleteDeviceById(
+    @RefreshToken() token: string,
+    @Param('deviceId') deviceId: string,
+  ) {
+    const isValid = await this.authRepository.validateRefreshToken(token);
     if (!isValid || !isValid.userId || !isValid.deviceId) {
-      return res.status(401).json({ message: 'Unauthorized ' });
+      throw new UnauthorizedException();
     }
 
     const user = await this.authRepository.findUserByID(isValid.userId);
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      throw new UnauthorizedException();
     }
 
     const device = await this.deviceRepository.findDeviceById(deviceId); //
     if (!device) {
-      return res.sendStatus(404);
+      throw new NotFoundException(`Device with ID ${deviceId} not found`);
     }
 
     if (device.userId !== isValid.userId) {
-      return res.sendStatus(403);
+      throw new ForbiddenException('this resource is forbidden');
     }
 
-    await this.deviceRepository.deleteDeviceId(deviceId);
-    res.sendStatus(204);
+    return await this.deviceRepository.deleteDeviceId(deviceId);
   }
 }

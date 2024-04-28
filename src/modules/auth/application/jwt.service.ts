@@ -3,7 +3,7 @@ import * as jwt from 'jsonwebtoken';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { UsersModel } from '../../../models/usersSchemas';
-import { AuthRepository } from '../auth.repository';
+
 import {
   accessTokenSecret1,
   refreshTokenSecret2,
@@ -13,7 +13,6 @@ import {
 @Injectable()
 export class JwtService {
   constructor(
-    private readonly authRepository: AuthRepository,
     @InjectModel('User') private readonly userModel: Model<UsersModel>,
   ) {}
 
@@ -72,5 +71,13 @@ export class JwtService {
         }
       });
     });
+  }
+
+  async verifyAccessToken(accessToken: string): Promise<any> {
+    try {
+      return jwt.verify(accessToken, accessTokenSecret1);
+    } catch (e) {
+      return null;
+    }
   }
 }

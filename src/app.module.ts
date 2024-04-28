@@ -68,7 +68,7 @@ import { BlogIdExistsValidator } from './customValidate/blog.id.custom.validator
     MongooseModule.forFeature([{ name: Device.name, schema: DeviceSchema }]),
     ThrottlerModule.forRoot([
       {
-        ttl: 60000,
+        ttl: 10000,
         limit: 5,
       },
     ]),

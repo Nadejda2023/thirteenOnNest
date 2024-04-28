@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
@@ -123,9 +127,12 @@ export class AuthRepository {
   async validateRefreshToken(refreshToken: string): Promise<any> {
     try {
       const payload = jwt.verify(refreshToken, refreshTokenSecret2);
+      console.log('refresh token secret:', refreshTokenSecret2);
+      console.log('payload:', payload);
       return payload;
     } catch (error) {
-      return null;
+      console.log('error:', error);
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
 
